@@ -1,0 +1,82 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: telegram-english-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${HOST_DB_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend-api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: telegram-english-backend-api
+    env_file:
+      - .env
+    working_dir: /app/backend
+    command:
+      [
+        "sh",
+        "-c",
+        "if [ \"$BACKEND_RELOAD\" = \"true\" ]; then uvicorn app.main:app --host $BACKEND_HOST --port $BACKEND_PORT --reload; else uvicorn app.main:app --host $BACKEND_HOST --port $BACKEND_PORT; fi"
+      ]
+    volumes:
+      - ./backend:/app/backend
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend-bot:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: telegram-english-backend-bot
+    env_file:
+      - .env
+    working_dir: /app/backend
+    command: ["python", "-m", "app.bot.main"]
+    volumes:
+      - ./backend:/app/backend
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: telegram-english-frontend
+    environment:
+      BACKEND_PORT: ${BACKEND_PORT}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+      VITE_API_URL: ${VITE_API_URL}
+    working_dir: /app/frontend
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "${FRONTEND_PORT}"]
+    volumes:
+      - ./frontend:/app/frontend
+      - /app/frontend/node_modules
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    depends_on:
+      backend-api:
+        condition: service_started
+
+volumes:
+  postgres_data:

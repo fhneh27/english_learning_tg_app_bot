@@ -1,0 +1,9 @@
+aiogram==3.20.0.post0
+alembic==1.16.1
+asyncpg==0.30.0
+fastapi==0.115.12
+httpx==0.28.1
+openai==1.84.0
+pydantic-settings==2.9.1
+SQLAlchemy==2.0.41
+uvicorn[standard]==0.34.2
