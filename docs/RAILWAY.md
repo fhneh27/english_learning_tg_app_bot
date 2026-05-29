@@ -109,8 +109,41 @@ PostgreSQL ──► api ──► frontend
                  └──► bot
 ```
 
-## Если билд падает
+## Build failed (api / bot / frontend)
 
-- **Settings** → **Build** → Dockerfile path: `backend/Dockerfile`
-- **Deploy** → Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Логи: вкладка **Deployments** → последний деплой
+### 1. Root Directory — главная причина
+
+Для **api**, **bot**, **frontend**:
+
+**Settings** → **Source** → **Root Directory** = **пусто** (корень репозитория, не `backend` и не `frontend`).
+
+Если указать `frontend`, путь `frontend/Dockerfile.prod` не найдётся → **Build failed**.
+
+### 2. Config-as-code (отдельно для каждого сервиса)
+
+| Сервис | Config file |
+|--------|-------------|
+| api | `railway.toml` (по умолчанию) |
+| bot | `railway.bot.toml` |
+| frontend | `railway.frontend.toml` |
+
+### 3. Логи
+
+Сервис → **Deployments** → failed → **View logs** → последние 30 строк.
+
+Частые ошибки:
+
+- `failed to solve: ... Dockerfile` — неверный Root Directory или dockerfile path
+- `alembic` / `connection refused` — у api нет Variables к Postgres (`${{Postgres.*}}`)
+- `ValidationError` / missing env — не заданы `TG_BOT_TOKEN`, `OPENAI_API_KEY`
+
+### 4. Build settings
+
+- **api / bot**: Dockerfile `backend/Dockerfile`, builder **Dockerfile**
+- **frontend**: Dockerfile `frontend/Dockerfile.prod`
+
+Если Root Directory = `frontend`, используйте `Dockerfile.railway` и путь в config: `Dockerfile.railway` (см. `frontend/Dockerfile.railway`).
+
+### 5. После фикса
+
+**Redeploy** каждый сервис (или Deploy всего проекта).
