@@ -29,6 +29,7 @@ class VocabularyRepository:
         tg_user_id: int,
         query: str | None,
         status: str | None,
+        source_type: str | None,
         limit: int,
         offset: int,
     ) -> list[VocabularyEntry]:
@@ -52,6 +53,9 @@ class VocabularyRepository:
 
         if status:
             statement = statement.where(VocabularyEntry.status == status)
+
+        if source_type:
+            statement = statement.where(VocabularyEntry.source_type == source_type)
 
         result = await self.session.execute(statement)
         return list(result.scalars().all())

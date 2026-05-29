@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
     openai_model: str = Field(alias="OPENAI_MODEL")
     openai_timeout_seconds: int = Field(alias="OPENAI_TIMEOUT_SECONDS")
+    tmdb_api_key: str = Field(default="", alias="TMDB_API_KEY")
+    tmdb_base_url: str = Field(default="https://api.themoviedb.org/3", alias="TMDB_BASE_URL")
+    tmdb_image_base_url: str = Field(default="https://image.tmdb.org/t/p/w500", alias="TMDB_IMAGE_BASE_URL")
+    musicbrainz_base_url: str = Field(default="https://musicbrainz.org/ws/2", alias="MUSICBRAINZ_BASE_URL")
+    cover_art_archive_base_url: str = Field(default="https://coverartarchive.org", alias="COVER_ART_ARCHIVE_BASE_URL")
+    musicbrainz_user_agent: str = Field(
+        default="telegram-english-mini-app/1.0 (personal educational app)",
+        alias="MUSICBRAINZ_USER_AGENT",
+    )
 
     app_env: str = Field(alias="APP_ENV")
     log_level: str = Field(alias="LOG_LEVEL")

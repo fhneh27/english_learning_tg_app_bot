@@ -1,8 +1,14 @@
 import { apiRequest } from "./client";
 import {
+  VocabularyAnalysisResponse,
+  VocabularyAnalyzePayload,
   VocabularyCreatePayload,
   VocabularyEntry,
+  VocabularyFollowUpPayload,
+  VocabularyFollowUpResponse,
   VocabularyProgressPayload,
+  VocabularySavePayload,
+  VocabularySourceType,
   VocabularyStatus,
 } from "../types/vocabulary";
 
@@ -10,6 +16,7 @@ type FetchEntriesParams = {
   tgUserId: number;
   q?: string;
   status?: VocabularyStatus;
+  sourceType?: VocabularySourceType;
 };
 
 export function createVocabularyEntry(payload: VocabularyCreatePayload): Promise<VocabularyEntry> {
@@ -17,6 +24,36 @@ export function createVocabularyEntry(payload: VocabularyCreatePayload): Promise
     method: "POST",
     body: JSON.stringify(payload),
     errorMessage: "Could not create the vocabulary entry.",
+  });
+}
+
+export function analyzeVocabularyEntry(
+  payload: VocabularyAnalyzePayload
+): Promise<VocabularyAnalysisResponse> {
+  return apiRequest<VocabularyAnalysisResponse>("/vocabulary/analyze", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    errorMessage: "Could not analyze the vocabulary entry.",
+  });
+}
+
+export function saveAnalyzedVocabularyEntry(payload: VocabularySavePayload): Promise<VocabularyEntry> {
+  return apiRequest<VocabularyEntry>("/vocabulary/save", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    errorMessage: "Could not save the analyzed vocabulary entry.",
+  });
+}
+
+export function requestVocabularyFollowUp(
+  entryId: string,
+  tgUserId: number,
+  payload: VocabularyFollowUpPayload
+): Promise<VocabularyFollowUpResponse> {
+  return apiRequest<VocabularyFollowUpResponse>(`/vocabulary/${entryId}/follow-up?tg_user_id=${tgUserId}`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+    errorMessage: "Could not get a deeper explanation for this entry.",
   });
 }
 
@@ -31,6 +68,10 @@ export function fetchVocabularyEntries(params: FetchEntriesParams): Promise<Voca
 
   if (params.status) {
     searchParams.set("status", params.status);
+  }
+
+  if (params.sourceType) {
+    searchParams.set("source_type", params.sourceType);
   }
 
   return apiRequest<VocabularyEntry[]>(`/vocabulary?${searchParams.toString()}`, {

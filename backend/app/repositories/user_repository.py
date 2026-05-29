@@ -44,3 +44,41 @@ class UserRepository:
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    async def get_suggestion_blacklist(self, tg_user_id: int) -> list[str]:
+        user = await self.get_by_tg_user_id(tg_user_id)
+        if user is None:
+            return []
+        return self._normalize_blacklist(user.suggestion_blacklist)
+
+    async def add_to_suggestion_blacklist(self, tg_user_id: int, text: str) -> list[str]:
+        normalized_text = self._normalize_blacklist_text(text)
+        if not normalized_text:
+            return await self.get_suggestion_blacklist(tg_user_id)
+
+        user = await self.get_by_tg_user_id(tg_user_id)
+        if user is None:
+            await self.upsert_user(tg_user_id=tg_user_id)
+            user = await self.get_by_tg_user_id(tg_user_id)
+        if user is None:
+            return []
+
+        next_blacklist = self._normalize_blacklist([*user.suggestion_blacklist, normalized_text])
+        user.suggestion_blacklist = next_blacklist
+        self.session.add(user)
+        return next_blacklist
+
+    @staticmethod
+    def _normalize_blacklist_text(text: str) -> str:
+        return " ".join(text.strip().lower().split())
+
+    @classmethod
+    def _normalize_blacklist(cls, items: list[str] | None) -> list[str]:
+        normalized: list[str] = []
+        seen: set[str] = set()
+        for item in items or []:
+            value = cls._normalize_blacklist_text(item)
+            if value and value not in seen:
+                seen.add(value)
+                normalized.append(value)
+        return normalized

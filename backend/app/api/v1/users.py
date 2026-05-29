@@ -1,9 +1,19 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db_session
+from app.repositories.activity_repository import ActivityRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserRegisterRequest, UserResponse
+from app.schemas.user import (
+    DailyVocabularySuggestionResponse,
+    SuggestionBlacklistRequest,
+    SuggestionBlacklistResponse,
+    StreakSummaryResponse,
+    UserRegisterRequest,
+    UserResponse,
+)
+from app.services.openai_service import OpenAIRateLimitError, OpenAIServiceError
+from app.services.streak_service import StreakService
 
 router = APIRouter()
 
@@ -35,3 +45,54 @@ async def list_users(
 ) -> list[UserResponse]:
     repository = UserRepository(session)
     return await repository.list_users(limit=limit, offset=offset)
+
+
+@router.get("/streak", response_model=StreakSummaryResponse)
+async def get_user_streak(
+    tg_user_id: int = Query(..., description="Telegram user ID"),
+    session: AsyncSession = Depends(get_db_session),
+) -> StreakSummaryResponse:
+    streak_service = StreakService(
+        session=session,
+        activity_repository=ActivityRepository(session),
+        user_repository=UserRepository(session),
+    )
+    return await streak_service.get_summary(tg_user_id)
+
+
+@router.get("/streak/suggestions", response_model=DailyVocabularySuggestionResponse)
+async def get_streak_suggestions(
+    tg_user_id: int = Query(..., description="Telegram user ID"),
+    session: AsyncSession = Depends(get_db_session),
+) -> DailyVocabularySuggestionResponse:
+    streak_service = StreakService(
+        session=session,
+        activity_repository=ActivityRepository(session),
+        user_repository=UserRepository(session),
+    )
+    try:
+        return await streak_service.get_daily_vocabulary_suggestions(tg_user_id)
+    except OpenAIRateLimitError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="AI quota or rate limit reached. Please try again later.",
+        ) from exc
+    except OpenAIServiceError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="AI could not generate vocabulary suggestions right now.",
+        ) from exc
+
+
+@router.post("/streak/suggestions/blacklist", response_model=SuggestionBlacklistResponse)
+async def add_suggestion_to_blacklist(
+    payload: SuggestionBlacklistRequest,
+    session: AsyncSession = Depends(get_db_session),
+) -> SuggestionBlacklistResponse:
+    streak_service = StreakService(
+        session=session,
+        activity_repository=ActivityRepository(session),
+        user_repository=UserRepository(session),
+    )
+    blacklist_size = await streak_service.add_suggestion_to_blacklist(payload.tg_user_id, payload.text)
+    return SuggestionBlacklistResponse(text=payload.text, blacklist_size=blacklist_size)
