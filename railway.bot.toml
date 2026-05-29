@@ -1,0 +1,8 @@
+# Use this file path in the bot service: Settings → Config-as-code → railway.bot.toml
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "backend/Dockerfile"
+
+[deploy]
+startCommand = "python -m app.bot.main"
+restartPolicyType = "ON_FAILURE"

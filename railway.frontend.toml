@@ -1,0 +1,7 @@
+# Use this file path in the frontend service: Settings → Config-as-code → railway.frontend.toml
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "frontend/Dockerfile.prod"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
