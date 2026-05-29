@@ -4,12 +4,14 @@ import Button from "../components/Button";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
+import StreakTierMark from "../components/StreakTierMark";
 import {
   DailyVocabularySuggestion,
   DailyVocabularySuggestionItem,
   StreakDay,
   StreakSummary,
 } from "../types/user";
+import { getDailyGoalsProgress, getStreakVisualTier, StreakVisualTier } from "../utils/streak";
 
 type StreakPageProps = {
   streak: StreakSummary | null;
@@ -27,7 +29,7 @@ type StreakPageProps = {
   blacklistedSuggestionTexts: string[];
 };
 
-type AccentVariant = "fire" | "gold" | "purple" | "green";
+type AccentVariant = "fire" | "gold" | "purple" | "green" | "diamond";
 
 function getTodayStr(): string {
   const now = new Date();
@@ -44,24 +46,29 @@ function build7DayWindow(last14: StreakDay[]): Array<StreakDay | null> {
   return [...Array<null>(Math.max(0, 7 - last7.length)).fill(null), ...last7];
 }
 
+function tierLabel(tier: StreakVisualTier): string {
+  if (tier === "diamond") {
+    return "Diamond streak";
+  }
+  if (tier === "ember") {
+    return "Fire streak";
+  }
+  return "Start a streak";
+}
+
 function StatCard({
   value,
   label,
   unit,
   variant,
-  delay = 0,
 }: {
   value: number | string;
   label: string;
   unit?: string;
   variant: AccentVariant;
-  delay?: number;
 }) {
   return (
-    <Card
-      className={`streak-stat-card streak-stat-card-${variant}`}
-      style={{ animationDelay: `${delay}s` } as CSSProperties}
-    >
+    <Card className={`streak-stat-card streak-stat-card-${variant}`}>
       <div className={`streak-stat-value streak-stat-value-${variant}`}>
         {value}
         {unit ? <span className="streak-stat-unit">{unit}</span> : null}
@@ -72,76 +79,141 @@ function StatCard({
 }
 
 function StreakHero({ streak }: { streak: StreakSummary }) {
+  const tier = getStreakVisualTier(streak);
   const isActiveToday = streak.today_actions > 0;
+  const heroCount = tier === "diamond" ? streak.elite_current_streak_days : streak.current_streak_days;
+  const heroUnit =
+    heroCount === 1
+      ? tier === "diamond"
+        ? "diamond day"
+        : "day streak"
+      : tier === "diamond"
+        ? "diamond days"
+        : "days streak";
 
   return (
-    <section className="card streak-hero-card" aria-label="Streak hero">
-      <div className="streak-hero-orb streak-hero-orb-1" aria-hidden="true" />
-      <div className="streak-hero-orb streak-hero-orb-2" aria-hidden="true" />
-
+    <section
+      className={`card streak-hero-card streak-hero-card--${tier}`}
+      aria-label={`${tierLabel(tier)} hero`}
+    >
       <div className="streak-hero-inner">
-        <div className="streak-flame-container" aria-hidden="true">
-          <div className="streak-glow-ring" />
-          <div className="streak-glow-ring" />
-          <div className="streak-glow-ring" />
-          <span className="streak-flame-icon">{"\u{1F525}"}</span>
+        <div className="streak-flame-container">
+          <StreakTierMark tier={tier} className="streak-hero-tier-mark" />
         </div>
 
-        <div>
-          <div className="streak-hero-number">{streak.current_streak_days}</div>
-          <span className="streak-hero-unit">
-            {streak.current_streak_days === 1 ? "day streak" : "days streak"}
-          </span>
+        <div className="streak-hero-count-block">
+          <p className="streak-hero-tier-label">{tierLabel(tier)}</p>
+          <div className="streak-hero-number">{heroCount}</div>
+          <span className="streak-hero-unit">{heroUnit}</span>
         </div>
 
         <p className="streak-hero-message">
-          {isActiveToday
-            ? `You already showed up today with ${streak.today_actions} action${streak.today_actions === 1 ? "" : "s"}.`
-            : "No activity yet today. One useful move keeps the chain alive."}
+          {tier === "diamond"
+            ? "Both daily goals completed on consecutive days. Keep the diamond chain alive."
+            : tier === "ember"
+              ? isActiveToday
+                ? `You showed up today with ${streak.today_actions} action${streak.today_actions === 1 ? "" : "s"}.`
+                : "Your fire streak is active. One move today keeps it burning."
+              : isActiveToday
+                ? "You started today. Complete both daily goals to unlock a diamond streak."
+                : "Add words or mark progress today to start your streak."}
         </p>
 
-        {isActiveToday ? (
-          <div className="streak-today-badge">
-            <span className="streak-today-dot" />
-            Active today
-          </div>
-        ) : (
-          <div className="streak-inactive-hint">Today is still open</div>
-        )}
+        <div className="streak-hero-meta-row">
+          {tier === "diamond" ? (
+            <span className="streak-hero-chip streak-hero-chip-fire">
+              Fire streak: {streak.current_streak_days}d
+            </span>
+          ) : null}
+          {tier !== "none" && streak.elite_today_complete ? (
+            <span className="streak-hero-chip streak-hero-chip-diamond">Goals done today</span>
+          ) : null}
+          {isActiveToday && !streak.elite_today_complete ? (
+            <span className="streak-hero-chip streak-hero-chip-neutral">Active today</span>
+          ) : null}
+          {!isActiveToday && tier !== "none" ? (
+            <span className="streak-hero-chip streak-hero-chip-neutral">Today is still open</span>
+          ) : null}
+        </div>
       </div>
     </section>
   );
 }
 
 function EliteStreakCard({ streak }: { streak: StreakSummary }) {
+  const progress = getDailyGoalsProgress(streak);
+  const isDiamondActive = streak.elite_current_streak_days > 0;
+  const cardClass = [
+    "streak-diamond-card",
+    isDiamondActive ? "streak-diamond-card--active" : "",
+    streak.elite_today_complete ? "streak-diamond-card--today-complete" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <Card className="streak-diamond-card">
+    <Card className={cardClass}>
+      <div className="streak-diamond-shine" aria-hidden="true" />
+
       <div className="streak-diamond-top">
         <div>
-          <p className="section-title" style={{ margin: 0 }}>
-            Diamond streak
-          </p>
+          <p className="section-title streak-diamond-eyebrow">Diamond streak</p>
           <h3 className="streak-diamond-title">Full daily goals streak</h3>
+          <p className="detail-line streak-diamond-subtitle">
+            Add {streak.daily_add_goal} words and mark {streak.daily_learn_goal} as learned in one day.
+          </p>
         </div>
-        <span className="streak-diamond-badge">
-          {streak.elite_today_complete ? "Goals done today" : "Goals not complete yet"}
+        <span
+          className={
+            streak.elite_today_complete ? "streak-diamond-badge streak-diamond-badge--live" : "streak-diamond-badge"
+          }
+        >
+          {streak.elite_today_complete ? "Diamond day secured" : "Goals in progress"}
         </span>
+      </div>
+
+      <div className="streak-diamond-progress-ring" style={{ "--progress": `${progress.combinedPct}%` } as CSSProperties}>
+        <div className="streak-diamond-progress-inner">
+          <StreakTierMark tier={isDiamondActive ? "diamond" : "none"} className="streak-diamond-progress-icon" />
+          <strong>{streak.elite_current_streak_days}</strong>
+          <span>current</span>
+        </div>
       </div>
 
       <div className="streak-diamond-grid">
         <div className="streak-diamond-metric">
           <strong>{streak.elite_current_streak_days}</strong>
-          <span>current</span>
+          <span>current diamond</span>
         </div>
         <div className="streak-diamond-metric">
           <strong>{streak.elite_best_streak_days}</strong>
-          <span>best</span>
+          <span>personal best</span>
         </div>
       </div>
 
-      <p className="detail-line">
-        This streak grows only on days when you both add 8 words and mark 2 words as learned.
-      </p>
+      <div className="streak-diamond-goals-preview">
+        <div className="streak-diamond-goal-line">
+          <span>Added today</span>
+          <strong>
+            {streak.words_added_today}/{streak.daily_add_goal}
+          </strong>
+        </div>
+        <div className="streak-diamond-goal-track">
+          <div className="streak-diamond-goal-fill streak-diamond-goal-fill-add" style={{ width: `${progress.addPct}%` } as CSSProperties} />
+        </div>
+        <div className="streak-diamond-goal-line">
+          <span>Learned today</span>
+          <strong>
+            {streak.words_learned_today}/{streak.daily_learn_goal}
+          </strong>
+        </div>
+        <div className="streak-diamond-goal-track">
+          <div
+            className="streak-diamond-goal-fill streak-diamond-goal-fill-learn"
+            style={{ width: `${progress.learnPct}%` } as CSSProperties}
+          />
+        </div>
+      </div>
     </Card>
   );
 }
@@ -150,14 +222,23 @@ function WeeklyCalendar({ last14 }: { last14: StreakDay[] }) {
   const today = getTodayStr();
   const days = build7DayWindow(last14);
   const activeDays = last14.slice(-7).filter((day) => day.is_active).length;
+  const diamondDays = last14.slice(-7).filter((day) => day.is_elite).length;
 
   return (
     <Card className="streak-week-card">
       <div className="streak-week-header">
-        <p className="section-title" style={{ margin: 0 }}>
-          Last 7 days
-        </p>
-        <span className="streak-week-meta">{activeDays} / 7 active</span>
+        <div>
+          <p className="section-title" style={{ margin: 0 }}>
+            Last 7 days
+          </p>
+          <p className="detail-line streak-week-legend">
+            <span className="streak-week-legend-item streak-week-legend-fire">Fire day</span>
+            <span className="streak-week-legend-item streak-week-legend-diamond">Diamond day</span>
+          </p>
+        </div>
+        <span className="streak-week-meta">
+          {activeDays}/7 fire · {diamondDays}/7 diamond
+        </span>
       </div>
       <div className="streak-week-grid">
         {days.map((day, index) => {
@@ -173,7 +254,7 @@ function WeeklyCalendar({ last14 }: { last14: StreakDay[] }) {
           const isToday = day.date === today;
           const dotClass = [
             "streak-week-dot",
-            day.is_active ? "active" : "",
+            day.is_elite ? "diamond" : day.is_active ? "active" : "",
             isToday ? "today" : "",
           ]
             .filter(Boolean)
@@ -183,7 +264,7 @@ function WeeklyCalendar({ last14 }: { last14: StreakDay[] }) {
             <div key={day.date} className="streak-week-day">
               <span className="streak-week-day-label">{getDayLabel(day.date)}</span>
               <div className={dotClass} title={`${day.date}: ${day.action_count} actions`}>
-                {day.is_active ? "OK" : isToday ? "." : ""}
+                {day.is_elite ? "◆" : day.is_active ? "●" : isToday ? "·" : ""}
               </div>
             </div>
           );
@@ -194,20 +275,24 @@ function WeeklyCalendar({ last14 }: { last14: StreakDay[] }) {
 }
 
 function DailyGoalsCard({ streak }: { streak: StreakSummary }) {
-  const addPct = Math.min(Math.round((streak.words_added_today / streak.daily_add_goal) * 100), 100);
-  const learnPct = Math.min(Math.round((streak.words_learned_today / streak.daily_learn_goal) * 100), 100);
+  const progress = getDailyGoalsProgress(streak);
+  const addPct = progress.addPct;
+  const learnPct = progress.learnPct;
 
   return (
-    <Card className="streak-progress-card">
+    <Card className={`streak-progress-card${streak.elite_today_complete ? " streak-progress-card--diamond-ready" : ""}`}>
       <div className="streak-progress-header">
         <div>
           <p className="section-title" style={{ margin: 0 }}>
             Daily goals
           </p>
           <p className="detail-line" style={{ marginTop: 4 }}>
-            Add 8 new words and mark 2 words as learned every day.
+            Complete both goals to earn a diamond day and grow your diamond streak.
           </p>
         </div>
+        {streak.elite_today_complete ? (
+          <span className="streak-diamond-badge streak-diamond-badge--live">Diamond ready</span>
+        ) : null}
       </div>
 
       <div className="daily-goal-block">
@@ -218,7 +303,7 @@ function DailyGoalsCard({ streak }: { streak: StreakSummary }) {
           </span>
         </div>
         <div className="streak-progress-bar-track">
-          <div className="streak-progress-bar-fill" style={{ width: `${addPct}%` } as CSSProperties} />
+          <div className="streak-progress-bar-fill streak-progress-bar-fill-add" style={{ width: `${addPct}%` } as CSSProperties} />
         </div>
         <p className="detail-line">
           {streak.remaining_add_goal > 0
@@ -235,7 +320,10 @@ function DailyGoalsCard({ streak }: { streak: StreakSummary }) {
           </span>
         </div>
         <div className="streak-progress-bar-track">
-          <div className="streak-progress-bar-fill" style={{ width: `${learnPct}%` } as CSSProperties} />
+          <div
+            className="streak-progress-bar-fill streak-progress-bar-fill-learn"
+            style={{ width: `${learnPct}%` } as CSSProperties}
+          />
         </div>
         <p className="detail-line">
           {streak.remaining_learn_goal > 0
@@ -406,10 +494,10 @@ function StreakPage({
       <WeeklyCalendar last14={streak.last_14_days} />
 
       <div className="streak-stats-grid">
-        <StatCard value={streak.current_streak_days} unit="d" label="Current streak" variant="fire" delay={0.05} />
-        <StatCard value={streak.best_streak_days} unit="d" label="Best streak" variant="gold" delay={0.1} />
-        <StatCard value={streak.total_words} label="Total words" variant="purple" delay={0.15} />
-        <StatCard value={streak.learned_words} label="Learned" variant="green" delay={0.2} />
+        <StatCard value={streak.current_streak_days} unit="d" label="Fire streak" variant="fire" />
+        <StatCard value={streak.elite_current_streak_days} unit="d" label="Diamond streak" variant="diamond" />
+        <StatCard value={streak.total_words} label="Total words" variant="purple" />
+        <StatCard value={streak.learned_words} label="Learned" variant="green" />
       </div>
 
       <DailyGoalsCard streak={streak} />

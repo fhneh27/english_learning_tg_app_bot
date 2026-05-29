@@ -1,15 +1,17 @@
 import { memo, ReactNode } from "react";
 
 import RadialNav, { AppTab } from "./RadialNav";
+import { StreakVisualTier } from "../utils/streak";
 
 type AppLayoutProps = {
   activeTab: AppTab;
   children: ReactNode;
   onTabChange: (tab: AppTab) => void;
   streakCount: number;
+  streakTier: StreakVisualTier;
 };
 
-function AppLayout({ activeTab, children, onTabChange, streakCount }: AppLayoutProps) {
+function AppLayout({ activeTab, children, onTabChange, streakCount, streakTier }: AppLayoutProps) {
   return (
     <div className="app-frame">
       <div className="app-topbar">
@@ -23,7 +25,7 @@ function AppLayout({ activeTab, children, onTabChange, streakCount }: AppLayoutP
           <SettingsIcon />
         </button>
       </div>
-      <RadialNav activeTab={activeTab} onTabChange={onTabChange} streakCount={streakCount} />
+      <RadialNav activeTab={activeTab} onTabChange={onTabChange} streakCount={streakCount} streakTier={streakTier} />
       <main className="app-shell">{children}</main>
     </div>
   );

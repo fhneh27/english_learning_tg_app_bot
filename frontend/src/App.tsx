@@ -72,6 +72,7 @@ import {
   formatAnalysisModeLabel,
   formatSourceLabel,
 } from "./utils/vocabulary";
+import { getNavStreakDisplay } from "./utils/streak";
 
 const DEFAULT_DEV_TG_USER_ID = 123456789;
 const STORAGE_TG_USER_KEY = "telegram_mini_app_tg_user";
@@ -882,10 +883,13 @@ function App() {
     setMusicTabQuery(event.target.value);
   };
 
+  const navStreak = getNavStreakDisplay(streakSummary);
+
   return (
     <AppLayout
       activeTab={activeTab}
-      streakCount={streakSummary?.current_streak_days ?? 0}
+      streakCount={navStreak.count}
+      streakTier={navStreak.tier}
       onTabChange={(tab) => {
         startTransition(() => {
           resetTabRoot(tab);

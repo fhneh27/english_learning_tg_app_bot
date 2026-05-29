@@ -67,7 +67,7 @@ class StreakService:
             active_days_total=len(active_dates),
             today_actions=activity_map.get(today).action_count if today in activity_map else 0,
             last_activity_date=active_dates[-1] if active_dates else None,
-            last_14_days=self._build_day_window(activity_map, today, 14),
+            last_14_days=self._build_day_window(activity_map, today, 14, set(elite_dates)),
             last_30_days_active=self._count_active_days_in_window(activity_map, today, 30),
             next_milestone_days=self._calculate_next_milestone(current_streak),
             total_words=total_words,
@@ -170,9 +170,11 @@ class StreakService:
         activity_map: dict[date, object],
         end_date: date,
         total_days: int,
+        elite_dates: set[date] | None = None,
     ) -> list[StreakDayResponse]:
         start_date = end_date - timedelta(days=total_days - 1)
         days: list[StreakDayResponse] = []
+        elite_date_set = elite_dates or set()
 
         for offset in range(total_days):
             current_date = start_date + timedelta(days=offset)
@@ -182,6 +184,7 @@ class StreakService:
                     date=current_date,
                     is_active=row is not None,
                     action_count=getattr(row, "action_count", 0),
+                    is_elite=current_date in elite_date_set,
                 )
             )
 

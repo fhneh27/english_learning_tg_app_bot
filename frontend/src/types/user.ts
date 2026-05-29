@@ -2,6 +2,7 @@ export type StreakDay = {
   date: string;
   is_active: boolean;
   action_count: number;
+  is_elite: boolean;
 };
 
 export type StreakSummary = {

@@ -25,6 +25,7 @@ class StreakDayResponse(BaseModel):
     date: date
     is_active: bool
     action_count: int
+    is_elite: bool = False
 
 
 class StreakSummaryResponse(BaseModel):

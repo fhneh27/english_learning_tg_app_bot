@@ -1,5 +1,8 @@
 import { memo } from "react";
 
+import StreakTierMark from "./StreakTierMark";
+import { StreakVisualTier } from "../utils/streak";
+
 const APP_TABS = ["home", "words", "streak", "media", "music", "settings"] as const;
 
 export type AppTab = (typeof APP_TABS)[number];
@@ -8,6 +11,7 @@ type RadialNavProps = {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
   streakCount: number;
+  streakTier: StreakVisualTier;
 };
 
 type OrbitTab = Exclude<AppTab, "streak" | "settings">;
@@ -77,7 +81,16 @@ function MusicIcon() {
   );
 }
 
-function RadialNav({ activeTab, onTabChange, streakCount }: RadialNavProps) {
+function RadialNav({ activeTab, onTabChange, streakCount, streakTier }: RadialNavProps) {
+  const centerClass = [
+    "radial-nav-center",
+    `radial-nav-center--${streakTier}`,
+    activeTab === "streak" ? "active" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const streakLabel = streakTier === "diamond" ? "Diamond streak" : "Streak";
+
   return (
     <nav className="radial-nav" aria-label="Primary navigation">
       <div className="radial-nav-container">
@@ -87,16 +100,16 @@ function RadialNav({ activeTab, onTabChange, streakCount }: RadialNavProps) {
 
         <button
           type="button"
-          className={activeTab === "streak" ? "radial-nav-center active" : "radial-nav-center"}
+          className={centerClass}
           onClick={() => onTabChange("streak")}
-          aria-label={`Streak - ${streakCount} days`}
+          aria-label={`${streakLabel} — ${streakCount} days`}
           aria-current={activeTab === "streak" ? "page" : undefined}
         >
           <div className="radial-nav-center-glow" />
           <div className="radial-nav-center-inner">
-            <span className="radial-nav-center-emoji" aria-hidden="true">🔥</span>
+            <StreakTierMark tier={streakTier} className="radial-nav-center-mark" />
             <span className="radial-nav-center-value">{streakCount}</span>
-            <span className="radial-nav-center-label">Streak</span>
+            <span className="radial-nav-center-label">{streakTier === "diamond" ? "Diamond" : "Streak"}</span>
           </div>
         </button>
 
