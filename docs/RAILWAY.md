@@ -109,6 +109,12 @@ PostgreSQL ──► api ──► frontend
                  └──► bot
 ```
 
+## Пустой словарь / «БД не подключена»
+
+Локальная БД (Docker) и Railway Postgres — **разные**. Старые слова с ПК сами не появятся. См. [RAILWAY_DATA.md](./RAILWAY_DATA.md).
+
+Быстрая проверка: отправьте слово боту на проде → откройте WORDS в Mini App.
+
 ## Build failed (api / bot / frontend)
 
 ### 1. Root Directory — главная причина

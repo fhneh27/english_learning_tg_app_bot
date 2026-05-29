@@ -18,6 +18,7 @@ type ResultCardProps = {
   isSaveDisabled?: boolean;
   isSaving: boolean;
   onDestinationChange: (value: VocabularySourceType) => void;
+  onDismiss: () => void;
   onSave: () => Promise<void>;
   saveHint?: string | null;
   selectedDestination: VocabularySourceType;
@@ -31,6 +32,7 @@ function ResultCard({
   isSaveDisabled = false,
   isSaving,
   onDestinationChange,
+  onDismiss,
   onSave,
   saveHint = null,
   selectedDestination,
@@ -111,6 +113,9 @@ function ResultCard({
       <div className="result-card-actions">
         <Button type="button" isLoading={isSaving} disabled={isSaveDisabled} onClick={() => void onSave()}>
           Save Word
+        </Button>
+        <Button type="button" variant="ghost" disabled={isSaving} onClick={onDismiss}>
+          Don&apos;t save
         </Button>
       </div>
       {saveHint ? <p className="detail-line">{saveHint}</p> : null}

@@ -1,4 +1,4 @@
-import { ChangeEvent, startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTheme } from "./contexts/ThemeContext";
 import {
@@ -163,7 +163,7 @@ function App() {
   const [blacklistedSuggestionTexts, setBlacklistedSuggestionTexts] = useState<string[]>([]);
   const [wordsQuery, setWordsQuery] = useState("");
   const [wordsFilter, setWordsFilter] = useState<WordsFilter>("all");
-  const [homeInput, setHomeInput] = useState("");
+  const homeInputRef = useRef<HTMLTextAreaElement>(null);
   const [analysisResponse, setAnalysisResponse] = useState<VocabularyAnalysisResponse | null>(null);
   const [analysisMode, setAnalysisMode] = useState<VocabularyAnalysisMode>("general");
   const [selectedSourceType, setSelectedSourceType] = useState<VocabularySourceType>("unsorted");
@@ -443,7 +443,7 @@ function App() {
   }
 
   async function handleAnalyzeEntry() {
-    const trimmedText = homeInput.trim();
+    const trimmedText = homeInputRef.current?.value.trim() ?? "";
     if (!trimmedText) {
       setHomeError("Enter an English word or phrase first.");
       return;
@@ -515,7 +515,9 @@ function App() {
         await loadMediaVocabulary(mediaWordsScope);
       }
       setAnalysisResponse(null);
-      setHomeInput("");
+      if (homeInputRef.current) {
+        homeInputRef.current.value = "";
+      }
       setMusicQuery("");
       setMusicResults([]);
       setSelectedMusicTrack(null);
@@ -526,6 +528,16 @@ function App() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function handleDismissAnalyzedEntry() {
+    setAnalysisResponse(null);
+    setHomeError(null);
+    setMusicQuery("");
+    setMusicResults([]);
+    setSelectedMusicTrack(null);
+    setMusicError(null);
+    setSelectedSourceType(homeMediaContext ? "media" : "unsorted");
   }
 
   async function handleIncreaseRepeat(entryId: string) {
@@ -883,9 +895,6 @@ function App() {
   }
 
   const currentModel = analysisResponse?.ai_model || entries.find((entry) => entry.ai_model)?.ai_model || null;
-  const handleHomeInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    setHomeInput(event.target.value);
-  };
   const handleWordsQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
     setWordsQuery(event.target.value);
   };
@@ -965,14 +974,18 @@ function App() {
                 </Card>
               ) : null}
 
-              <Input
-                multiline
-                label="English word or phrase"
-                placeholder="For example: shallow, take it easy, or a short sentence"
-                rows={4}
-                value={homeInput}
-                onChange={handleHomeInputChange}
-              />
+              <label className="input-field">
+                <span className="input-label">English word or phrase</span>
+                <textarea
+                  ref={homeInputRef}
+                  className="input-control input-control-textarea"
+                  placeholder="For example: shallow, take it easy, or a short sentence"
+                  rows={4}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+              </label>
               <Button type="button" isLoading={isAnalyzing} onClick={() => void handleAnalyzeEntry()}>
                 Add / Analyze
               </Button>
@@ -1006,6 +1019,7 @@ function App() {
                   }
                 }}
                 onSave={handleSaveAnalyzedEntry}
+                onDismiss={handleDismissAnalyzedEntry}
                 saveHint={
                   selectedSourceType === "music" && !selectedMusicTrack
                     ? "Pick a song first, then save the word to Music."
