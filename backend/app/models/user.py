@@ -15,6 +15,7 @@ class TgUser(Base):
     tg_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True, index=True)
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     first_name: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    ai_custom_instructions: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     suggestion_blacklist: Mapped[list[str]] = mapped_column(
         JSONB,
         nullable=False,

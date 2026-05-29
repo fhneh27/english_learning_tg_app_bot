@@ -9,6 +9,8 @@ from app.schemas.user import (
     SuggestionBlacklistRequest,
     SuggestionBlacklistResponse,
     StreakSummaryResponse,
+    UpdateAIInstructionsRequest,
+    UpdateAIInstructionsResponse,
     UserRegisterRequest,
     UserResponse,
 )
@@ -96,3 +98,44 @@ async def add_suggestion_to_blacklist(
     )
     blacklist_size = await streak_service.add_suggestion_to_blacklist(payload.tg_user_id, payload.text)
     return SuggestionBlacklistResponse(text=payload.text, blacklist_size=blacklist_size)
+
+
+@router.post("/ai-instructions", response_model=UpdateAIInstructionsResponse)
+async def update_ai_instructions(
+    payload: UpdateAIInstructionsRequest,
+    session: AsyncSession = Depends(get_db_session),
+) -> UpdateAIInstructionsResponse:
+    repository = UserRepository(session)
+    user = await repository.update_ai_custom_instructions(payload.tg_user_id, payload.ai_custom_instructions)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+    await session.commit()
+    await session.refresh(user)
+    return UpdateAIInstructionsResponse(
+        tg_user_id=user.tg_user_id,
+        ai_custom_instructions=user.ai_custom_instructions,
+        success=True,
+    )
+
+
+@router.get("/ai-instructions", response_model=UpdateAIInstructionsResponse)
+async def get_ai_instructions(
+    tg_user_id: int = Query(..., description="Telegram user ID"),
+    session: AsyncSession = Depends(get_db_session),
+) -> UpdateAIInstructionsResponse:
+    repository = UserRepository(session)
+    user = await repository.get_by_tg_user_id(tg_user_id)
+    if user is None:
+        return UpdateAIInstructionsResponse(
+            tg_user_id=tg_user_id,
+            ai_custom_instructions=None,
+            success=True,
+        )
+    return UpdateAIInstructionsResponse(
+        tg_user_id=user.tg_user_id,
+        ai_custom_instructions=user.ai_custom_instructions,
+        success=True,
+    )

@@ -72,6 +72,18 @@ class UserRepository:
     def _normalize_blacklist_text(text: str) -> str:
         return " ".join(text.strip().lower().split())
 
+    async def update_ai_custom_instructions(self, tg_user_id: int, instructions: str | None) -> TgUser | None:
+        user = await self.get_by_tg_user_id(tg_user_id)
+        if user is None:
+            await self.upsert_user(tg_user_id=tg_user_id)
+            user = await self.get_by_tg_user_id(tg_user_id)
+        if user is None:
+            return None
+
+        user.ai_custom_instructions = instructions.strip() if instructions else None
+        self.session.add(user)
+        return user
+
     @classmethod
     def _normalize_blacklist(cls, items: list[str] | None) -> list[str]:
         normalized: list[str] = []

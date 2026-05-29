@@ -27,10 +27,15 @@ class OpenAIService:
         self.settings = get_settings()
         self.base_url = "https://api.openai.com/v1/chat/completions"
 
-    async def analyze_text(self, text: str, analysis_mode: str = "general") -> tuple[AIVocabularyPayload, dict]:
+    async def analyze_text(
+        self,
+        text: str,
+        analysis_mode: str = "general",
+        custom_instructions: str | None = None,
+    ) -> tuple[AIVocabularyPayload, dict]:
         return await self._request_json_response(
             response_model=AIVocabularyPayload,
-            system_prompt=self._build_analysis_prompt(analysis_mode),
+            system_prompt=self._build_analysis_prompt(analysis_mode, custom_instructions),
             user_content=f"Analyze this input: {text}",
             temperature=0.3,
             timeout_seconds=self.settings.openai_timeout_seconds,
@@ -40,6 +45,7 @@ class OpenAIService:
         self,
         entry: VocabularyEntry,
         prompt: str,
+        custom_instructions: str | None = None,
     ) -> tuple[VocabularyFollowUpResponse, dict]:
         entry_payload = {
             "original_text": entry.original_text,
@@ -57,7 +63,7 @@ class OpenAIService:
         }
         return await self._request_json_response(
             response_model=VocabularyFollowUpResponse,
-            system_prompt=self._build_follow_up_prompt(),
+            system_prompt=self._build_follow_up_prompt(custom_instructions),
             user_content=(
                 "You are given a saved vocabulary entry and a learner follow-up question.\n"
                 f"Entry JSON: {json.dumps(entry_payload, ensure_ascii=False)}\n"
@@ -76,13 +82,14 @@ class OpenAIService:
         daily_learn_goal: int,
         recent_words: list[str],
         blacklisted_suggestions: list[str],
+        custom_instructions: str | None = None,
     ) -> tuple[DailyVocabularySuggestionResponse, dict]:
         remaining_add_goal = max(daily_add_goal - words_added_today, 0)
         target_count = remaining_add_goal if remaining_add_goal > 0 else 5
         request_count = min(max(target_count + 5, 8), 14)
         return await self._request_json_response(
             response_model=DailyVocabularySuggestionResponse,
-            system_prompt=self._build_daily_suggestions_prompt(request_count),
+            system_prompt=self._build_daily_suggestions_prompt(request_count, custom_instructions),
             user_content=(
                 "Build smart English vocabulary suggestions for today.\n"
                 f"Words added today: {words_added_today}\n"
@@ -158,7 +165,7 @@ class OpenAIService:
         return response.json()
 
     @staticmethod
-    def _build_analysis_prompt(analysis_mode: str) -> str:
+    def _build_analysis_prompt(analysis_mode: str, custom_instructions: str | None = None) -> str:
         mode_block = {
             "general": (
                 "- Focus on the standard, most useful meaning for everyday learning.\n"
@@ -174,6 +181,10 @@ class OpenAIService:
             ),
         }[analysis_mode]
 
+        custom_block = ""
+        if custom_instructions and custom_instructions.strip():
+            custom_block = f"\nUser preferences:\n{custom_instructions.strip()}\n"
+
         return (
             "You are helping build an English vocabulary notebook for Russian-speaking learners.\n"
             "Rules:\n"
@@ -186,6 +197,7 @@ class OpenAIService:
             "- If there are several meanings, show the most useful ones.\n"
             "- Keep output concise but useful.\n\n"
             f"Mode guidance:\n{mode_block}\n"
+            f"{custom_block}"
             "Return this exact JSON shape:\n"
             "{\n"
             '  "original_text": "string",\n'
@@ -202,7 +214,11 @@ class OpenAIService:
         )
 
     @staticmethod
-    def _build_follow_up_prompt() -> str:
+    def _build_follow_up_prompt(custom_instructions: str | None = None) -> str:
+        custom_block = ""
+        if custom_instructions and custom_instructions.strip():
+            custom_block = f"\nUser preferences:\n{custom_instructions.strip()}\n"
+
         return (
             "You are helping a Russian-speaking learner understand one saved English word or phrase better.\n"
             "Rules:\n"
@@ -212,7 +228,8 @@ class OpenAIService:
             "- Use the saved entry context first, then answer the learner's question directly.\n"
             "- If the question asks for more examples, give strong examples.\n"
             "- If the word is slang or conversational, explain tone and where it sounds natural.\n"
-            "- Avoid long lectures; be clear, smart, and practical.\n\n"
+            "- Avoid long lectures; be clear, smart, and practical.\n"
+            f"{custom_block}\n"
             "Return this exact JSON shape:\n"
             "{\n"
             '  "answer_ru": "string",\n'
@@ -224,7 +241,11 @@ class OpenAIService:
         )
 
     @staticmethod
-    def _build_daily_suggestions_prompt(target_count: int) -> str:
+    def _build_daily_suggestions_prompt(target_count: int, custom_instructions: str | None = None) -> str:
+        custom_block = ""
+        if custom_instructions and custom_instructions.strip():
+            custom_block = f"\nUser preferences:\n{custom_instructions.strip()}\n"
+
         return (
             "You are helping a Russian-speaking learner decide what English vocabulary to add today.\n"
             "Rules:\n"
@@ -242,7 +263,8 @@ class OpenAIService:
             "- Prefer words and phrases a person can realistically hear, read, text, or say today.\n"
             "- Keep every suggestion concise, sharp, distinct, and memorable.\n"
             "- `reason_ru` must explain why the suggestion is high-value for real life.\n"
-            "- `usage_hint_ru` must sound practical and socially aware, not academic.\n\n"
+            "- `usage_hint_ru` must sound practical and socially aware, not academic.\n"
+            f"{custom_block}\n"
             f"Return exactly {target_count} suggestions.\n\n"
             "Return this exact JSON shape:\n"
             "{\n"

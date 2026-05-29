@@ -59,7 +59,7 @@ class VocabularyService:
         music_duration_ms: int | None = None,
         source_label: str | None = None,
     ) -> VocabularyEntry:
-        analyzed, _ = await self.analyze_text(text, analysis_mode)
+        analyzed, _ = await self.analyze_text(text, analysis_mode, tg_user_id)
         return await self.save_entry(
             tg_user_id=tg_user_id,
             analyzed=analyzed,
@@ -84,13 +84,20 @@ class VocabularyService:
         self,
         text: str,
         analysis_mode: str = "general",
+        tg_user_id: int | None = None,
     ) -> tuple[AIVocabularyPayload, str | None]:
         cleaned_text = text.strip()
         if not cleaned_text:
             raise ValueError("Text must not be empty.")
 
+        custom_instructions = None
+        if tg_user_id:
+            user = await self.user_repository.get_by_tg_user_id(tg_user_id)
+            if user:
+                custom_instructions = user.ai_custom_instructions
+
         normalized_mode = self._validate_analysis_mode(analysis_mode)
-        analyzed, _ = await self.openai_service.analyze_text(cleaned_text, normalized_mode)
+        analyzed, _ = await self.openai_service.analyze_text(cleaned_text, normalized_mode, custom_instructions)
         return analyzed, self.settings.openai_model
 
     async def save_entry(
@@ -211,8 +218,13 @@ class VocabularyService:
         if not cleaned_prompt:
             raise ValueError("Prompt must not be empty.")
 
+        custom_instructions = None
+        user = await self.user_repository.get_by_tg_user_id(tg_user_id)
+        if user:
+            custom_instructions = user.ai_custom_instructions
+
         entry = await self.get_entry(entry_id, tg_user_id)
-        follow_up, _ = await self.openai_service.explain_entry(entry, cleaned_prompt)
+        follow_up, _ = await self.openai_service.explain_entry(entry, cleaned_prompt, custom_instructions)
         if follow_up.follow_up_model is None:
             follow_up.follow_up_model = self.settings.openai_model
         await self.streak_service.record_activity(tg_user_id, "ask_ai")

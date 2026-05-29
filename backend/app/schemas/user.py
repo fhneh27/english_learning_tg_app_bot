@@ -17,6 +17,7 @@ class UserResponse(BaseModel):
     tg_user_id: int
     username: str | None
     first_name: str | None
+    ai_custom_instructions: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -82,3 +83,14 @@ class SuggestionBlacklistRequest(BaseModel):
 class SuggestionBlacklistResponse(BaseModel):
     text: str
     blacklist_size: int
+
+
+class UpdateAIInstructionsRequest(BaseModel):
+    tg_user_id: int
+    ai_custom_instructions: str | None = Field(default=None, max_length=2000)
+
+
+class UpdateAIInstructionsResponse(BaseModel):
+    tg_user_id: int
+    ai_custom_instructions: str | None
+    success: bool

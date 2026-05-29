@@ -55,3 +55,9 @@ export type SuggestionBlacklistResponse = {
   text: string;
   blacklist_size: number;
 };
+
+export type AIInstructionsResponse = {
+  tg_user_id: number;
+  ai_custom_instructions: string | null;
+  success: boolean;
+};

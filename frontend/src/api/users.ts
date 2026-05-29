@@ -1,6 +1,11 @@
 import { apiRequest } from "./client";
 import { RegisterUserPayload } from "../types/vocabulary";
-import { DailyVocabularySuggestion, StreakSummary, SuggestionBlacklistResponse } from "../types/user";
+import { 
+  DailyVocabularySuggestion, 
+  StreakSummary, 
+  SuggestionBlacklistResponse, 
+  AIInstructionsResponse 
+} from "../types/user";
 
 export function registerUser(payload: RegisterUserPayload): Promise<void> {
   return apiRequest<void>("/users/register", {
@@ -35,5 +40,26 @@ export function blacklistVocabularySuggestion(
       text,
     }),
     errorMessage: "Could not blacklist this suggestion.",
+  });
+}
+
+export function fetchAIInstructions(tgUserId: number): Promise<AIInstructionsResponse> {
+  return apiRequest<AIInstructionsResponse>(`/users/ai-instructions?tg_user_id=${tgUserId}`, {
+    method: "GET",
+    errorMessage: "Could not load AI instructions.",
+  });
+}
+
+export function updateAIInstructions(
+  tgUserId: number,
+  aiCustomInstructions: string | null,
+): Promise<AIInstructionsResponse> {
+  return apiRequest<AIInstructionsResponse>("/users/ai-instructions", {
+    method: "POST",
+    body: JSON.stringify({
+      tg_user_id: tgUserId,
+      ai_custom_instructions: aiCustomInstructions,
+    }),
+    errorMessage: "Could not update AI instructions.",
   });
 }

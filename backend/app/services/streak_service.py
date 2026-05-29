@@ -92,6 +92,11 @@ class StreakService:
         recent_words = await self._list_recent_words(tg_user_id, limit=120)
         suggestion_blacklist = await self.user_repository.get_suggestion_blacklist(tg_user_id)
 
+        custom_instructions = None
+        user = await self.user_repository.get_by_tg_user_id(tg_user_id)
+        if user:
+            custom_instructions = user.ai_custom_instructions
+
         suggestion_response, _ = await self.openai_service.suggest_daily_vocabulary(
             words_added_today=words_added_today,
             daily_add_goal=self.DAILY_ADD_GOAL,
@@ -99,6 +104,7 @@ class StreakService:
             daily_learn_goal=self.DAILY_LEARN_GOAL,
             recent_words=recent_words,
             blacklisted_suggestions=suggestion_blacklist,
+            custom_instructions=custom_instructions,
         )
 
         suggestion_response.suggestions = self._filter_suggestions(

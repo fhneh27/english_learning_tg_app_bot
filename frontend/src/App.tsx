@@ -19,9 +19,11 @@ import {
 import { searchMusicTracks } from "./api/music";
 import {
   blacklistVocabularySuggestion,
+  fetchAIInstructions,
   fetchDailyVocabularySuggestions,
   fetchUserStreak,
   registerUser,
+  updateAIInstructions,
 } from "./api/users";
 import {
   analyzeVocabularyEntry,
@@ -192,6 +194,12 @@ function App() {
   const [musicTabResults, setMusicTabResults] = useState<MusicTrackSearchItem[]>([]);
   const [isMusicTabSearching, setIsMusicTabSearching] = useState(false);
   const [musicTabError, setMusicTabError] = useState<string | null>(null);
+  
+  const [aiInstructions, setAiInstructions] = useState<string>("");
+  const [isAiInstructionsLoading, setIsAiInstructionsLoading] = useState(false);
+  const [isAiInstructionsSaving, setIsAiInstructionsSaving] = useState(false);
+  const [aiInstructionsError, setAiInstructionsError] = useState<string | null>(null);
+  const [aiInstructionsSaved, setAiInstructionsSaved] = useState(false);
 
   const [tgUser, setTgUser] = useState(() => getTelegramUser());
   const selectedEntry = useMemo(
@@ -245,6 +253,7 @@ function App() {
     void loadStreak();
     void loadMediaLibrary();
     void loadMediaVocabulary(mediaWordsScope);
+    void loadAiInstructions();
     setDailySuggestion(null);
     setDailySuggestionError(null);
     setSavedSuggestionTexts([]);
@@ -282,6 +291,37 @@ function App() {
       setScreenError(getErrorMessage(requestError));
     } finally {
       setIsStreakLoading(false);
+    }
+  }
+  
+  async function loadAiInstructions() {
+    setIsAiInstructionsLoading(true);
+    setAiInstructionsError(null);
+
+    try {
+      const data = await fetchAIInstructions(tgUserId);
+      setAiInstructions(data.ai_custom_instructions || "");
+    } catch (requestError) {
+      setAiInstructionsError(getErrorMessage(requestError));
+    } finally {
+      setIsAiInstructionsLoading(false);
+    }
+  }
+
+  async function handleSaveAiInstructions() {
+    setIsAiInstructionsSaving(true);
+    setAiInstructionsError(null);
+    setAiInstructionsSaved(false);
+
+    try {
+      const trimmed = aiInstructions.trim();
+      await updateAIInstructions(tgUserId, trimmed || null);
+      setAiInstructionsSaved(true);
+      setTimeout(() => setAiInstructionsSaved(false), 3000);
+    } catch (requestError) {
+      setAiInstructionsError(getErrorMessage(requestError));
+    } finally {
+      setIsAiInstructionsSaving(false);
     }
   }
 
@@ -1700,6 +1740,52 @@ function App() {
                     <div className="theme-switch-thumb" />
                   </div>
                 </button>
+              </div>
+            </Card>
+
+            <Card className="ai-instructions-card">
+              <div className="card-heading">
+                <div>
+                  <p className="section-title">AI Custom Instructions</p>
+                  <h3 style={{ margin: "4px 0 0" }}>Customize AI behavior</h3>
+                  <p className="detail-line" style={{ marginTop: 4 }}>
+                    Add your preferences for how AI should explain words, create examples, and suggest vocabulary.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="stack">
+                {isAiInstructionsLoading ? (
+                  <LoadingState message="Loading your instructions..." />
+                ) : (
+                  <>
+                    <label className="input-field">
+                      <span className="input-label">Your instructions (optional)</span>
+                      <textarea
+                        className="input-control input-control-textarea"
+                        placeholder="Example: Focus on British English, use simple explanations, include idioms..."
+                        rows={6}
+                        value={aiInstructions}
+                        onChange={(e) => setAiInstructions(e.target.value)}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+                    </label>
+                    
+                    <Button 
+                      type="button" 
+                      isLoading={isAiInstructionsSaving} 
+                      onClick={() => void handleSaveAiInstructions()}
+                    >
+                      {aiInstructionsSaved ? "✓ Saved!" : "Save Instructions"}
+                    </Button>
+                    
+                    {aiInstructionsError ? (
+                      <p className="feedback-message error">{aiInstructionsError}</p>
+                    ) : null}
+                  </>
+                )}
               </div>
             </Card>
 
