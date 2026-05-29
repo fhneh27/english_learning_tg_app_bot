@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 const APP_TABS = ["home", "words", "streak", "media", "music", "settings"] as const;
 
 export type AppTab = (typeof APP_TABS)[number];
@@ -124,4 +126,4 @@ function RadialNav({ activeTab, onTabChange, streakCount }: RadialNavProps) {
   );
 }
 
-export default RadialNav;
+export default memo(RadialNav);

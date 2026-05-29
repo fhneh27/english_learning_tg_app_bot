@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { memo, ReactNode } from "react";
 
 import RadialNav, { AppTab } from "./RadialNav";
 
@@ -12,15 +12,6 @@ type AppLayoutProps = {
 function AppLayout({ activeTab, children, onTabChange, streakCount }: AppLayoutProps) {
   return (
     <div className="app-frame">
-      <div className="app-atmosphere" aria-hidden="true">
-        <span className="app-atmosphere-prism" />
-        <span className="app-atmosphere-sheen" />
-        <span className="app-atmosphere-mesh" />
-        <span className="app-atmosphere-glow app-atmosphere-glow-primary" />
-        <span className="app-atmosphere-glow app-atmosphere-glow-secondary" />
-        <span className="app-atmosphere-glow app-atmosphere-glow-tertiary" />
-        <span className="app-atmosphere-noise" />
-      </div>
       <div className="app-topbar">
         <button
           type="button"
@@ -57,4 +48,4 @@ function SettingsIcon() {
   );
 }
 
-export default AppLayout;
+export default memo(AppLayout);

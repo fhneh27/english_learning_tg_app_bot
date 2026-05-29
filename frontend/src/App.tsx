@@ -1,4 +1,4 @@
-import { ChangeEvent, startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, startTransition, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTheme } from "./contexts/ThemeContext";
 import {
@@ -43,6 +43,7 @@ import MusicTrackPicker from "./components/MusicTrackPicker";
 import ResultCard from "./components/ResultCard";
 import WordCard from "./components/WordCard";
 import StreakPage from "./pages/StreakPage";
+import WordsTab from "./pages/WordsTab";
 import {
   EpisodeDetail,
   FranchiseDetail,
@@ -68,25 +69,13 @@ import {
   VocabularySourceType,
 } from "./types/vocabulary";
 import {
-  filterEntries,
   formatAnalysisModeLabel,
   formatSourceLabel,
-  WordsFilter,
 } from "./utils/vocabulary";
 
 const DEFAULT_DEV_TG_USER_ID = 123456789;
 const STORAGE_TG_USER_KEY = "telegram_mini_app_tg_user";
 const TMDB_IMAGE_BASE_URL = import.meta.env.VITE_TMDB_IMAGE_BASE_URL || "https://image.tmdb.org/t/p/w500";
-
-const WORD_FILTER_OPTIONS: Array<{ label: string; value: WordsFilter }> = [
-  { label: "All", value: "all" },
-  { label: "New", value: "new" },
-  { label: "Learning", value: "learning" },
-  { label: "Learned", value: "learned" },
-  { label: "Unsorted", value: "unsorted" },
-  { label: "Movie / Series", value: "media" },
-  { label: "Music", value: "music" },
-];
 
 const DESTINATION_OPTIONS = [
   {
@@ -161,8 +150,6 @@ function App() {
   const [blacklistingSuggestionText, setBlacklistingSuggestionText] = useState<string | null>(null);
   const [savedSuggestionTexts, setSavedSuggestionTexts] = useState<string[]>([]);
   const [blacklistedSuggestionTexts, setBlacklistedSuggestionTexts] = useState<string[]>([]);
-  const [wordsQuery, setWordsQuery] = useState("");
-  const [wordsFilter, setWordsFilter] = useState<WordsFilter>("all");
   const homeInputRef = useRef<HTMLTextAreaElement>(null);
   const [analysisResponse, setAnalysisResponse] = useState<VocabularyAnalysisResponse | null>(null);
   const [analysisMode, setAnalysisMode] = useState<VocabularyAnalysisMode>("general");
@@ -206,14 +193,9 @@ function App() {
   const [musicTabError, setMusicTabError] = useState<string | null>(null);
 
   const [tgUser, setTgUser] = useState(() => getTelegramUser());
-  const deferredWordsQuery = useDeferredValue(wordsQuery);
   const selectedEntry = useMemo(
     () => entries.find((entry) => entry.id === selectedEntryId) ?? null,
     [entries, selectedEntryId]
-  );
-  const filteredWords = useMemo(
-    () => filterEntries(entries, wordsFilter, deferredWordsQuery),
-    [deferredWordsQuery, entries, wordsFilter]
   );
   const recentEntries = useMemo(() => entries.slice(0, 5), [entries]);
   const recentMusicEntries = useMemo(
@@ -876,8 +858,6 @@ function App() {
     }
 
     if (tab === "words") {
-      setWordsQuery("");
-      setWordsFilter("all");
       return;
     }
 
@@ -895,9 +875,6 @@ function App() {
   }
 
   const currentModel = analysisResponse?.ai_model || entries.find((entry) => entry.ai_model)?.ai_model || null;
-  const handleWordsQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setWordsQuery(event.target.value);
-  };
   const handleMediaQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
     setMediaQuery(event.target.value);
   };
@@ -919,7 +896,6 @@ function App() {
       {activeTab === "home" ? (
         <>
           <Card className="hero-card">
-            <div className="card-glow-orb" aria-hidden="true" />
             <div className="card-heading">
               <div>
                 <p className="section-title">Fast action</p>
@@ -1090,55 +1066,15 @@ function App() {
       ) : null}
 
       {activeTab === "words" ? (
-        <>
-          <Card>
-            <div className="stack">
-              <Input
-                type="search"
-                label="Search vocabulary"
-                placeholder="Search by word, translation, or meaning"
-                value={wordsQuery}
-                onChange={handleWordsQueryChange}
-              />
-              <div className="filter-row">
-                {WORD_FILTER_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={option.value === wordsFilter ? "filter-chip active" : "filter-chip"}
-                    onClick={() => setWordsFilter(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </Card>
-
-          {screenError ? <p className="feedback-message error">{screenError}</p> : null}
-
-          {isLoading ? (
-            <LoadingState message="Loading your vocabulary..." />
-          ) : filteredWords.length > 0 ? (
-            <div className="word-grid">
-              {filteredWords.map((entry) => (
-                <WordCard
-                  key={entry.id}
-                  entry={entry}
-                  onDelete={handleDeleteEntry}
-                  onIncreaseRepeat={handleIncreaseRepeat}
-                  onMarkLearned={handleMarkLearned}
-                  onOpenDetails={setSelectedEntryId}
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="Nothing matches this view"
-              description="Try another search or filter, or add a new word from the Home tab."
-            />
-          )}
-        </>
+        <WordsTab
+          entries={entries}
+          isLoading={isLoading}
+          screenError={screenError}
+          onDelete={handleDeleteEntry}
+          onIncreaseRepeat={handleIncreaseRepeat}
+          onMarkLearned={handleMarkLearned}
+          onOpenDetails={setSelectedEntryId}
+        />
       ) : null}
 
       {activeTab === "streak" ? (

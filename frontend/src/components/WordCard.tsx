@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import Button from "./Button";
 import Card from "./Card";
 import { VocabularyEntry } from "../types/vocabulary";
@@ -79,4 +81,4 @@ function WordCard({ entry, onDelete, onIncreaseRepeat, onMarkLearned, onOpenDeta
   );
 }
 
-export default WordCard;
+export default memo(WordCard);
