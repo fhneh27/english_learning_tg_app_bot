@@ -416,6 +416,19 @@ input, textarea { color: var(--text); }
 }
 .card h2, .card h3, .empty-state h3 { margin: 0; }
 
+.app-version-badge {
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(77, 168, 255, 0.26);
+  background: rgba(77, 168, 255, 0.1);
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  padding: 7px 10px;
+}
+
 /* ─── Stacks & Grids ────────────────────────────────────────────────── */
 
 .stack, .settings-grid, .placeholder-grid, .word-grid, .result-examples,

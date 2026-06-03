@@ -17,6 +17,7 @@ import {
   updateSeriesProgress,
 } from "./api/media";
 import { searchMusicTracks } from "./api/music";
+import { APP_DISPLAY_VERSION } from "./appVersion";
 import {
   blacklistVocabularySuggestion,
   fetchAIInstructions,
@@ -945,6 +946,7 @@ function App() {
                 <p className="section-title">Fast action</p>
                 <h2>Add vocabulary in one clean flow</h2>
               </div>
+              <span className="app-version-badge">v{APP_DISPLAY_VERSION}</span>
             </div>
 
             <div className="stack">
