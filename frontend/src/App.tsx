@@ -42,8 +42,8 @@ import EmptyState from "./components/EmptyState";
 import EntryDetailsModal from "./components/EntryDetailsModal";
 import Input from "./components/Input";
 import LoadingState from "./components/LoadingState";
-import MusicTrackPicker from "./components/MusicTrackPicker";
 import ResultCard from "./components/ResultCard";
+import SourcePickerModal from "./components/SourcePickerModal";
 import WordCard from "./components/WordCard";
 import StreakPage from "./pages/StreakPage";
 import WordsTab from "./pages/WordsTab";
@@ -164,6 +164,17 @@ function App() {
   const [selectedMusicTrack, setSelectedMusicTrack] = useState<MusicTrackSearchItem | null>(null);
   const [isMusicSearching, setIsMusicSearching] = useState(false);
   const [musicError, setMusicError] = useState<string | null>(null);
+  const [sourcePickerMode, setSourcePickerMode] = useState<"media" | "music" | null>(null);
+  const [sourcePickerMediaQuery, setSourcePickerMediaQuery] = useState("");
+  const [sourcePickerMediaFilter, setSourcePickerMediaFilter] = useState<MediaSearchFilter>("all");
+  const [sourcePickerMediaResults, setSourcePickerMediaResults] = useState<MediaSearchItem[]>([]);
+  const [sourcePickerSelectedMedia, setSourcePickerSelectedMedia] = useState<MediaCard | null>(null);
+  const [sourcePickerSelectedMusicTrack, setSourcePickerSelectedMusicTrack] = useState<MusicTrackSearchItem | null>(
+    null
+  );
+  const [isSourcePickerMediaSearching, setIsSourcePickerMediaSearching] = useState(false);
+  const [isSourcePickerApplying, setIsSourcePickerApplying] = useState(false);
+  const [sourcePickerMediaError, setSourcePickerMediaError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -212,6 +223,13 @@ function App() {
     () => entries.filter((entry) => entry.source_type === "music").slice(0, 8),
     [entries]
   );
+  const sourcePickerMediaLibraryItems = useMemo(
+    () => [...(mediaLibrary?.movies ?? []), ...(mediaLibrary?.series ?? [])],
+    [mediaLibrary]
+  );
+  const activeSourceLabel =
+    homeMediaContext?.source_label ??
+    (selectedMusicTrack ? `${selectedMusicTrack.artist_name} - ${selectedMusicTrack.title}` : null);
   const tgUserId = tgUser.id;
 
   useEffect(() => {
@@ -263,6 +281,12 @@ function App() {
     setMusicResults([]);
     setSelectedMusicTrack(null);
     setMusicError(null);
+    setSourcePickerMode(null);
+    setSourcePickerMediaQuery("");
+    setSourcePickerMediaResults([]);
+    setSourcePickerSelectedMedia(null);
+    setSourcePickerSelectedMusicTrack(null);
+    setSourcePickerMediaError(null);
     setMusicTabQuery("");
     setMusicTabResults([]);
     setMusicTabError(null);
@@ -501,8 +525,15 @@ function App() {
     const isMediaTarget = selectedSourceType === "media";
     const isMusicTarget = selectedSourceType === "music";
 
+    if (isMediaTarget && !homeMediaContext) {
+      setHomeError("Choose a movie or series first so this word can be saved under Media.");
+      openSourcePicker("media");
+      return;
+    }
+
     if (isMusicTarget && !selectedMusicTrack) {
       setHomeError("Choose a song first so this word can be saved under Music.");
+      openSourcePicker("music");
       return;
     }
 
@@ -542,11 +573,13 @@ function App() {
       if (homeInputRef.current) {
         homeInputRef.current.value = "";
       }
-      setMusicQuery("");
-      setMusicResults([]);
-      setSelectedMusicTrack(null);
-      setMusicError(null);
-      setSelectedSourceType(isMediaTarget ? "media" : "unsorted");
+      if (!isMusicTarget) {
+        setMusicQuery("");
+        setMusicResults([]);
+        setSelectedMusicTrack(null);
+        setMusicError(null);
+      }
+      setSelectedSourceType(isMediaTarget ? "media" : isMusicTarget ? "music" : "unsorted");
     } catch (requestError) {
       setHomeError(getErrorMessage(requestError));
     } finally {
@@ -557,11 +590,7 @@ function App() {
   function handleDismissAnalyzedEntry() {
     setAnalysisResponse(null);
     setHomeError(null);
-    setMusicQuery("");
-    setMusicResults([]);
-    setSelectedMusicTrack(null);
-    setMusicError(null);
-    setSelectedSourceType(homeMediaContext ? "media" : "unsorted");
+    setSelectedSourceType(homeMediaContext ? "media" : selectedMusicTrack ? "music" : "unsorted");
   }
 
   async function handleIncreaseRepeat(entryId: string) {
@@ -632,13 +661,43 @@ function App() {
   }
 
   function handleSelectMusicTrack(track: MusicTrackSearchItem) {
-    setSelectedMusicTrack(track);
-    setMusicResults([]);
+    setSourcePickerSelectedMusicTrack(track);
     setMusicError(null);
   }
 
-  function clearSelectedMusicTrack() {
+  function openSourcePicker(mode: "media" | "music") {
+    setSourcePickerMode(mode);
+    setHomeError(null);
+
+    if (mode === "media") {
+      const selectedMedia =
+        homeMediaContext?.media_item_id
+          ? sourcePickerMediaLibraryItems.find((item) => item.id === homeMediaContext.media_item_id) ?? null
+          : null;
+      setSourcePickerSelectedMedia(selectedMedia);
+      setSourcePickerMediaError(null);
+      return;
+    }
+
+    setSourcePickerSelectedMusicTrack(selectedMusicTrack);
+    setMusicError(null);
+  }
+
+  function clearHomeSource() {
+    setSelectedSourceType("unsorted");
+    setHomeMediaContext(null);
     setSelectedMusicTrack(null);
+    setSourcePickerSelectedMedia(null);
+    setSourcePickerSelectedMusicTrack(null);
+    setMusicQuery("");
+    setMusicResults([]);
+    setMusicError(null);
+    setSourcePickerMediaError(null);
+  }
+
+  function closeSourcePicker() {
+    setSourcePickerMode(null);
+    setSourcePickerMediaError(null);
     setMusicError(null);
   }
 
@@ -659,6 +718,28 @@ function App() {
       setMediaError(getErrorMessage(requestError));
     } finally {
       setIsMediaSearching(false);
+    }
+  }
+
+  async function handleSourcePickerMediaSearch() {
+    const trimmedQuery = sourcePickerMediaQuery.trim();
+    if (!trimmedQuery) {
+      setSourcePickerMediaError("Type movie or series title first.");
+      return;
+    }
+
+    setIsSourcePickerMediaSearching(true);
+    setSourcePickerMediaError(null);
+    try {
+      const result = await searchMedia(tgUserId, trimmedQuery, sourcePickerMediaFilter);
+      setSourcePickerMediaResults(result.results);
+      if (result.results.length === 0) {
+        setSourcePickerMediaError("Nothing matched yet. Try the original title or add a year.");
+      }
+    } catch (requestError) {
+      setSourcePickerMediaError(getErrorMessage(requestError));
+    } finally {
+      setIsSourcePickerMediaSearching(false);
     }
   }
 
@@ -699,6 +780,72 @@ function App() {
       await loadMediaLibrary();
     } catch (requestError) {
       setMediaError(getErrorMessage(requestError));
+    }
+  }
+
+  async function handleSelectSourcePickerMedia(item: MediaSearchItem) {
+    const existingItem = sourcePickerMediaLibraryItems.find(
+      (libraryItem) => libraryItem.tmdb_id === item.tmdb_id && libraryItem.media_type === item.media_type
+    );
+
+    if (existingItem) {
+      setSourcePickerSelectedMedia(existingItem);
+      setSourcePickerMediaError(null);
+      return;
+    }
+
+    setIsSourcePickerApplying(true);
+    setSourcePickerMediaError(null);
+    try {
+      const addedItem = await addMediaToLibrary(tgUserId, item.tmdb_id, item.media_type);
+      setSourcePickerSelectedMedia(addedItem);
+      setSourcePickerMediaResults((current) =>
+        current.map((mediaItem) =>
+          mediaItem.tmdb_id === item.tmdb_id && mediaItem.media_type === item.media_type
+            ? { ...mediaItem, is_in_library: true }
+            : mediaItem
+        )
+      );
+      await loadMediaLibrary();
+    } catch (requestError) {
+      setSourcePickerMediaError(getErrorMessage(requestError));
+    } finally {
+      setIsSourcePickerApplying(false);
+    }
+  }
+
+  function handleApplySourcePicker() {
+    if (sourcePickerMode === "media") {
+      if (!sourcePickerSelectedMedia) {
+        setSourcePickerMediaError("Choose a movie or series first.");
+        return;
+      }
+
+      setHomeMediaContext({
+        media_item_id: sourcePickerSelectedMedia.id,
+        source_label: sourcePickerSelectedMedia.title,
+      });
+      setSelectedSourceType("media");
+      setSelectedMusicTrack(null);
+      setMusicQuery("");
+      setMusicResults([]);
+      setMusicError(null);
+      setSourcePickerMode(null);
+      setHomeError(null);
+      return;
+    }
+
+    if (sourcePickerMode === "music") {
+      if (!sourcePickerSelectedMusicTrack) {
+        setMusicError("Choose a song first.");
+        return;
+      }
+
+      setSelectedMusicTrack(sourcePickerSelectedMusicTrack);
+      setSelectedSourceType("music");
+      setHomeMediaContext(null);
+      setSourcePickerMode(null);
+      setHomeError(null);
     }
   }
 
@@ -788,6 +935,9 @@ function App() {
     setMusicResults([]);
     setSelectedMusicTrack(null);
     setMusicError(null);
+    setSourcePickerMode(null);
+    setSourcePickerSelectedMusicTrack(null);
+    setSourcePickerSelectedMedia(null);
     setActiveTab("home");
   }
 
@@ -975,23 +1125,27 @@ function App() {
                 </div>
               </div>
 
-              {homeMediaContext ? (
+              {activeSourceLabel ? (
                 <Card className="home-source-context">
                   <div className="source-context-row">
                     <div>
-                      <p className="section-title">Media source attached</p>
-                      <h3>{homeMediaContext.source_label}</h3>
+                      <p className="section-title">
+                        {selectedSourceType === "music" ? "Music source attached" : "Media source attached"}
+                      </p>
+                      <h3>{activeSourceLabel}</h3>
                     </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => {
-                        setHomeMediaContext(null);
-                        setSelectedSourceType("unsorted");
-                      }}
-                    >
-                      Clear
-                    </Button>
+                    <div className="source-context-actions">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => openSourcePicker(selectedSourceType === "music" ? "music" : "media")}
+                      >
+                        Change
+                      </Button>
+                      <Button type="button" variant="ghost" onClick={clearHomeSource}>
+                        Clear
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ) : null}
@@ -1029,44 +1183,37 @@ function App() {
                 analysis={analysisResponse.analysis}
                 analysisMode={analysisResponse.analysis_mode}
                 destinationOptions={DESTINATION_OPTIONS}
-                isSaveDisabled={selectedSourceType === "music" && !selectedMusicTrack}
+                isSaveDisabled={
+                  (selectedSourceType === "music" && !selectedMusicTrack) ||
+                  (selectedSourceType === "media" && !homeMediaContext)
+                }
                 isSaving={isSaving}
                 onDestinationChange={(next) => {
-                  setSelectedSourceType(next);
                   setHomeError(null);
-                  if (next !== "media") {
-                    setHomeMediaContext(null);
+
+                  if (next === "unsorted") {
+                    clearHomeSource();
+                    return;
                   }
-                  if (next !== "music") {
-                    setMusicQuery("");
-                    setMusicResults([]);
-                    setSelectedMusicTrack(null);
-                    setMusicError(null);
+
+                  if (next === "media") {
+                    openSourcePicker("media");
+                    return;
                   }
+
+                  openSourcePicker("music");
                 }}
                 onSave={handleSaveAnalyzedEntry}
                 onDismiss={handleDismissAnalyzedEntry}
                 saveHint={
                   selectedSourceType === "music" && !selectedMusicTrack
                     ? "Pick a song first, then save the word to Music."
-                    : null
+                    : selectedSourceType === "media" && !homeMediaContext
+                      ? "Pick a movie or series first, then save the word to Media."
+                      : null
                 }
                 selectedDestination={selectedSourceType}
               />
-
-              {selectedSourceType === "music" ? (
-                <MusicTrackPicker
-                  error={musicError}
-                  isSearching={isMusicSearching}
-                  onClearSelection={clearSelectedMusicTrack}
-                  onQueryChange={setMusicQuery}
-                  onSearch={() => void handleMusicSearch()}
-                  onSelectTrack={handleSelectMusicTrack}
-                  query={musicQuery}
-                  results={musicResults}
-                  selectedTrack={selectedMusicTrack}
-                />
-              ) : null}
             </>
           ) : null}
 
@@ -1827,6 +1974,38 @@ function App() {
           onClose={() => {
             setSelectedEntryId(null);
           }}
+        />
+      ) : null}
+
+      {sourcePickerMode ? (
+        <SourcePickerModal
+          mediaError={sourcePickerMediaError}
+          mediaFilter={sourcePickerMediaFilter}
+          mediaLibraryItems={sourcePickerMediaLibraryItems}
+          mediaQuery={sourcePickerMediaQuery}
+          mediaResults={sourcePickerMediaResults}
+          mode={sourcePickerMode}
+          musicError={musicError}
+          musicQuery={musicQuery}
+          musicResults={musicResults}
+          onApply={handleApplySourcePicker}
+          onClose={closeSourcePicker}
+          onMediaFilterChange={setSourcePickerMediaFilter}
+          onMediaQueryChange={setSourcePickerMediaQuery}
+          onMediaSearch={() => void handleSourcePickerMediaSearch()}
+          onMusicQueryChange={setMusicQuery}
+          onMusicSearch={() => void handleMusicSearch()}
+          onSelectLibraryMedia={(item) => {
+            setSourcePickerSelectedMedia(item);
+            setSourcePickerMediaError(null);
+          }}
+          onSelectMediaResult={(item) => void handleSelectSourcePickerMedia(item)}
+          onSelectMusicTrack={handleSelectMusicTrack}
+          selectedMedia={sourcePickerSelectedMedia}
+          selectedMusicTrack={sourcePickerSelectedMusicTrack}
+          isApplying={isSourcePickerApplying}
+          isMediaSearching={isSourcePickerMediaSearching}
+          isMusicSearching={isMusicSearching}
         />
       ) : null}
     </AppLayout>
