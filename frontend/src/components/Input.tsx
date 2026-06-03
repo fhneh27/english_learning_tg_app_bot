@@ -12,14 +12,23 @@ type TextAreaProps = SharedInputProps & TextareaHTMLAttributes<HTMLTextAreaEleme
 function Input(props: TextInputProps | TextAreaProps) {
   const { className = "", label, multiline = false, ...restProps } = props;
   const wrapperClassName = ["input-field", className].filter(Boolean).join(" ");
+  const textAssistProps = {
+    autoCapitalize: restProps.autoCapitalize ?? "sentences",
+    autoCorrect: restProps.autoCorrect ?? "on",
+    spellCheck: restProps.spellCheck ?? true,
+  };
 
   return (
     <label className={wrapperClassName}>
       {label ? <span className="input-label">{label}</span> : null}
       {multiline ? (
-        <textarea {...(restProps as TextAreaProps)} className="input-control input-control-textarea" />
+        <textarea
+          {...textAssistProps}
+          {...(restProps as TextAreaProps)}
+          className="input-control input-control-textarea"
+        />
       ) : (
-        <input {...(restProps as TextInputProps)} className="input-control" />
+        <input {...textAssistProps} {...(restProps as TextInputProps)} className="input-control" />
       )}
     </label>
   );

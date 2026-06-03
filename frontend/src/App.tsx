@@ -1003,9 +1003,13 @@ function App() {
                   className="input-control input-control-textarea"
                   placeholder="For example: shallow, take it easy, or a short sentence"
                   rows={4}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
+                  autoCapitalize="sentences"
+                  autoComplete="on"
+                  autoCorrect="on"
+                  enterKeyHint="done"
+                  inputMode="text"
+                  lang="en"
+                  spellCheck={true}
                 />
               </label>
               <Button type="button" isLoading={isAnalyzing} onClick={() => void handleAnalyzeEntry()}>
@@ -1769,9 +1773,12 @@ function App() {
                         rows={6}
                         value={aiInstructions}
                         onChange={(e) => setAiInstructions(e.target.value)}
-                        autoComplete="off"
-                        autoCorrect="off"
-                        spellCheck={false}
+                        autoCapitalize="sentences"
+                        autoComplete="on"
+                        autoCorrect="on"
+                        enterKeyHint="done"
+                        inputMode="text"
+                        spellCheck={true}
                       />
                     </label>
                     
