@@ -27,14 +27,21 @@ export function useGsapScreenReveal(scope: RefObject<HTMLElement>, dependencies:
         return;
       }
 
-      const targets = uniqueTargets([
-        ...scopedTargets(scope.current, ".page-header"),
-        ...scopedTargets(scope.current, ".hero-card"),
-        ...scopedTargets(scope.current, ".card"),
-        ...scopedTargets(scope.current, ".word-card"),
-        ...scopedTargets(scope.current, ".media-card"),
-        ...scopedTargets(scope.current, ".streak-page > *"),
-      ]).filter((target) => !target.closest(".entry-modal, .source-picker-modal"));
+      const root = scope.current;
+      if (!root) {
+        return;
+      }
+
+      const directChildren = Array.from(root.children).filter(
+        (child): child is HTMLElement => child instanceof HTMLElement
+      );
+      const nestedChildren =
+        directChildren.length === 1 && directChildren[0].classList.contains("streak-page")
+          ? Array.from(directChildren[0].children).filter((child): child is HTMLElement => child instanceof HTMLElement)
+          : [];
+      const targets = uniqueTargets([...directChildren, ...nestedChildren])
+        .filter((target) => !target.closest(".entry-modal, .source-picker-modal"))
+        .slice(0, 10);
 
       if (targets.length === 0) {
         return;
@@ -42,14 +49,13 @@ export function useGsapScreenReveal(scope: RefObject<HTMLElement>, dependencies:
 
       gsap.fromTo(
         targets,
-        { autoAlpha: 0, y: 18, scale: 0.985 },
+        { autoAlpha: 0, y: 12 },
         {
           autoAlpha: 1,
           y: 0,
-          scale: 1,
-          duration: 0.48,
+          duration: 0.34,
           ease: "power3.out",
-          stagger: { each: 0.045, from: "start" },
+          stagger: { each: 0.026, from: "start" },
           clearProps: "opacity,visibility,transform",
         }
       );
@@ -66,36 +72,48 @@ export function useGsapRadialNav(scope: RefObject<HTMLElement>, dependencies: un
       }
 
       const navItems = scopedTargets(scope.current, "[data-gsap-nav-item]");
-      const activeItems = scopedTargets(scope.current, ".radial-nav-center.active, .radial-nav-segment.active");
 
       if (navItems.length > 0) {
         gsap.fromTo(
           navItems,
-          { autoAlpha: 0, y: 12, scale: 0.96 },
+          { autoAlpha: 0, y: 8 },
           {
             autoAlpha: 1,
             y: 0,
-            scale: 1,
-            duration: 0.5,
-            ease: "expo.out",
-            stagger: 0.045,
+            duration: 0.38,
+            ease: "power3.out",
+            stagger: 0.035,
             clearProps: "opacity,visibility,transform",
           }
         );
       }
+    },
+    { scope, dependencies, revertOnUpdate: true }
+  );
+}
 
-      if (activeItems.length > 0) {
-        gsap.fromTo(
-          activeItems,
-          { scale: 0.94 },
-          {
-            scale: 1,
-            duration: 0.42,
-            ease: "elastic.out(1, 0.72)",
-            clearProps: "transform",
-          }
-        );
+export function useGsapActiveNav(scope: RefObject<HTMLElement>, dependencies: unknown[] = []) {
+  useGSAP(
+    () => {
+      if (prefersReducedMotion()) {
+        return;
       }
+
+      const activeItems = scopedTargets(scope.current, ".radial-nav-center.active, .radial-nav-segment.active");
+      if (activeItems.length === 0) {
+        return;
+      }
+
+      gsap.fromTo(
+        activeItems,
+        { scale: 0.985 },
+        {
+          scale: 1,
+          duration: 0.22,
+          ease: "power2.out",
+          clearProps: "transform",
+        }
+      );
     },
     { scope, dependencies, revertOnUpdate: true }
   );
@@ -192,50 +210,62 @@ export function useGsapTapFeedback(scope: RefObject<HTMLElement>, dependencies: 
         return;
       }
 
-      const targets = scopedTargets(
-        scope.current,
-        [
-          ".button",
-          ".filter-chip",
-          ".mode-option",
-          ".destination-option",
-          ".prompt-chip",
-          ".recent-item",
-          ".list-row-button",
-          ".music-search-item",
-          ".source-picker-row",
-          ".radial-nav-center",
-          ".radial-nav-segment",
-        ].join(", ")
-      );
+      const root = scope.current;
+      if (!root) {
+        return;
+      }
+
+      const selector = [
+        ".button",
+        ".filter-chip",
+        ".mode-option",
+        ".destination-option",
+        ".prompt-chip",
+        ".recent-item",
+        ".list-row-button",
+        ".music-search-item",
+        ".source-picker-row",
+        ".radial-nav-center",
+        ".radial-nav-segment",
+      ].join(", ");
+
+      const findTarget = (event: PointerEvent): HTMLElement | null => {
+        if (!(event.target instanceof Element)) {
+          return null;
+        }
+        const target = event.target.closest<HTMLElement>(selector);
+        if (!target || !root.contains(target) || target.matches(":disabled")) {
+          return null;
+        }
+        return target;
+      };
 
       const press = (event: PointerEvent) => {
-        const target = event.currentTarget as HTMLElement;
-        if (target.matches(":disabled")) {
+        const target = findTarget(event);
+        if (!target) {
           return;
         }
-        gsap.to(target, { scale: 0.975, duration: 0.12, ease: "power2.out", overwrite: true });
+        gsap.to(target, { scale: 0.985, duration: 0.1, ease: "power2.out", overwrite: true });
       };
 
       const release = (event: PointerEvent) => {
-        const target = event.currentTarget as HTMLElement;
-        gsap.to(target, { scale: 1, duration: 0.22, ease: "power3.out", overwrite: true, clearProps: "transform" });
+        const target = findTarget(event);
+        if (!target) {
+          return;
+        }
+        gsap.to(target, { scale: 1, duration: 0.16, ease: "power2.out", overwrite: true, clearProps: "transform" });
       };
 
-      targets.forEach((target) => {
-        target.addEventListener("pointerdown", press);
-        target.addEventListener("pointerup", release);
-        target.addEventListener("pointerleave", release);
-        target.addEventListener("pointercancel", release);
-      });
+      root.addEventListener("pointerdown", press);
+      root.addEventListener("pointerup", release);
+      root.addEventListener("pointerleave", release);
+      root.addEventListener("pointercancel", release);
 
       return () => {
-        targets.forEach((target) => {
-          target.removeEventListener("pointerdown", press);
-          target.removeEventListener("pointerup", release);
-          target.removeEventListener("pointerleave", release);
-          target.removeEventListener("pointercancel", release);
-        });
+        root.removeEventListener("pointerdown", press);
+        root.removeEventListener("pointerup", release);
+        root.removeEventListener("pointerleave", release);
+        root.removeEventListener("pointercancel", release);
       };
     },
     { scope, dependencies, revertOnUpdate: true }

@@ -56,7 +56,7 @@ function EntryDetailsModal({ entry, onClose, onFollowUpComplete, tgUserId }: Ent
     setPrompt(event.target.value);
   }
 
-  useGsapModal(modalRef, [entry.id, Boolean(followUp), isLoading]);
+  useGsapModal(modalRef, [entry.id]);
 
   return (
     <div className="entry-modal-overlay" role="dialog" aria-modal="true" onClick={onClose} ref={modalRef}>

@@ -1,7 +1,7 @@
 import { memo, useRef } from "react";
 
 import StreakTierMark from "./StreakTierMark";
-import { useGsapRadialNav } from "../hooks/useGsapMotion";
+import { useGsapActiveNav, useGsapRadialNav } from "../hooks/useGsapMotion";
 import { StreakVisualTier } from "../utils/streak";
 
 const APP_TABS = ["home", "words", "streak", "media", "music", "settings"] as const;
@@ -93,7 +93,8 @@ function RadialNav({ activeTab, onTabChange, streakCount, streakTier }: RadialNa
     .join(" ");
   const streakLabel = streakTier === "diamond" ? "Diamond streak" : "Streak";
 
-  useGsapRadialNav(navRef, [activeTab, streakCount, streakTier]);
+  useGsapRadialNav(navRef, []);
+  useGsapActiveNav(navRef, [activeTab, streakTier]);
 
   return (
     <nav className="radial-nav" aria-label="Primary navigation" ref={navRef}>

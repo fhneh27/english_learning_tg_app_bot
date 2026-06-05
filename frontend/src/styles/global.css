@@ -257,13 +257,13 @@ input, textarea { color: var(--text); }
 
 .app-ambient-orb {
   position: absolute;
-  width: 220px;
-  height: 220px;
+  width: 170px;
+  height: 170px;
   border-radius: 999px;
-  filter: blur(34px);
-  opacity: 0.22;
+  filter: blur(16px);
+  opacity: 0.14;
   transform: translate3d(0, 0, 0);
-  animation: ambient-drift 18s ease-in-out infinite alternate;
+  animation: ambient-drift 24s ease-in-out infinite alternate;
 }
 
 .app-ambient-orb-cyan {
@@ -501,7 +501,6 @@ input, textarea { color: var(--text); }
   letter-spacing: 0.01em;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  will-change: transform;
 }
 
 .button::after {
@@ -1037,7 +1036,7 @@ input, textarea { color: var(--text); }
   background:
     radial-gradient(circle at 50% 100%, rgba(87, 199, 255, 0.16), transparent 38%),
     rgba(2, 5, 12, 0.78);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
   animation: fade-in 0.18s ease both;
 }
 
@@ -1054,7 +1053,6 @@ input, textarea { color: var(--text); }
     0 0 0 1px rgba(87, 199, 255, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.09);
   animation: source-sheet-in 0.24s cubic-bezier(0.2, 0.9, 0.22, 1) both;
-  will-change: transform, opacity;
 }
 
 .source-picker-header,
@@ -1192,7 +1190,6 @@ input, textarea { color: var(--text); }
   width: min(100%, 760px); max-height: calc(100dvh - 32px); overflow-y: auto; overflow-x: hidden;
   background: var(--panel-strong); border: 1px solid var(--panel-border);
   border-radius: 28px; box-shadow: var(--shadow-lg);
-  will-change: transform, opacity;
 }
 .entry-modal-header { margin-bottom: 14px; }
 .entry-source-block {
@@ -1540,7 +1537,6 @@ input, textarea { color: var(--text); }
     inset 0 -12px 22px rgba(127, 35, 10, 0.24);
   transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
   animation: none;
-  will-change: transform, opacity;
 }
 
 .radial-nav-center:active {
@@ -1599,7 +1595,6 @@ input, textarea { color: var(--text); }
     background 0.24s ease;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
-  will-change: transform, opacity;
 }
 
 .radial-nav-segment[data-position="top"],
@@ -2830,12 +2825,13 @@ body {
 }
 
 .app-frame::before {
-  inset: -35%;
+  inset: -18%;
   background:
-    conic-gradient(from 150deg at 50% 50%, rgba(87, 199, 255, 0.16), rgba(255, 122, 61, 0.12), rgba(77, 227, 155, 0.1), rgba(184, 140, 255, 0.11), rgba(87, 199, 255, 0.16));
-  filter: blur(42px) saturate(1.12);
-  opacity: 0.82;
-  animation: surface-wash 24s ease-in-out infinite alternate;
+    radial-gradient(circle at 18% 24%, rgba(87, 199, 255, 0.14), transparent 28%),
+    radial-gradient(circle at 82% 34%, rgba(255, 122, 61, 0.1), transparent 28%),
+    radial-gradient(circle at 52% 86%, rgba(184, 140, 255, 0.11), transparent 30%);
+  opacity: 0.72;
+  animation: surface-wash 30s ease-in-out infinite alternate;
 }
 
 .app-frame::after {
@@ -2845,7 +2841,7 @@ body {
     radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.06), transparent 48%);
   opacity: 0.42;
   mix-blend-mode: screen;
-  animation: sheen-scan 18s ease-in-out infinite alternate;
+  animation: sheen-scan 24s ease-in-out infinite alternate;
 }
 
 .app-topbar,
@@ -2866,7 +2862,7 @@ body {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.06) inset,
     0 18px 46px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(10px);
 }
 
 .card:hover {
@@ -3031,13 +3027,13 @@ body {
 }
 
 @keyframes surface-wash {
-  0% { transform: rotate(0deg) scale(1); opacity: 0.72; }
-  100% { transform: rotate(14deg) scale(1.06); opacity: 0.9; }
+  0% { transform: translate3d(-1.5%, -1%, 0) scale(1); opacity: 0.62; }
+  100% { transform: translate3d(1.5%, 1%, 0) scale(1.03); opacity: 0.78; }
 }
 
 @keyframes sheen-scan {
-  0% { transform: translate3d(-4%, -2%, 0); opacity: 0.28; }
-  100% { transform: translate3d(5%, 3%, 0); opacity: 0.48; }
+  0% { transform: translate3d(-2%, -1%, 0); opacity: 0.2; }
+  100% { transform: translate3d(2%, 1%, 0); opacity: 0.34; }
 }
 
 @keyframes hero-breathe {

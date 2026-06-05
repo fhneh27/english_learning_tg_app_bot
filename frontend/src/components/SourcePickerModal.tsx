@@ -72,7 +72,7 @@ function SourcePickerModal({
   const isMedia = mode === "media";
   const canApply = isMedia ? Boolean(selectedMedia) : Boolean(selectedMusicTrack);
 
-  useGsapModal(modalRef, [mode, mediaResults.length, musicResults.length, Boolean(selectedMedia), Boolean(selectedMusicTrack)]);
+  useGsapModal(modalRef, [mode]);
 
   return (
     <div className="source-picker-overlay" role="dialog" aria-modal="true" onClick={onClose} ref={modalRef}>
