@@ -242,9 +242,50 @@ input, textarea { color: var(--text); }
   overflow: hidden;
 }
 
-.app-frame > *:not(.app-atmosphere) {
+.app-frame > *:not(.app-atmosphere):not(.app-ambient) {
   position: relative;
   z-index: 1;
+}
+
+.app-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.app-ambient-orb {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  filter: blur(34px);
+  opacity: 0.22;
+  transform: translate3d(0, 0, 0);
+  animation: ambient-drift 18s ease-in-out infinite alternate;
+}
+
+.app-ambient-orb-cyan {
+  top: 10%;
+  left: -92px;
+  background: rgba(87, 199, 255, 0.38);
+}
+
+.app-ambient-orb-fire {
+  right: -100px;
+  top: 36%;
+  background: rgba(255, 122, 61, 0.3);
+  animation-duration: 22s;
+  animation-delay: -4s;
+}
+
+.app-ambient-orb-violet {
+  left: 32%;
+  bottom: -120px;
+  background: rgba(184, 140, 255, 0.28);
+  animation-duration: 26s;
+  animation-delay: -8s;
 }
 
 .app-atmosphere {
@@ -436,6 +477,15 @@ input, textarea { color: var(--text); }
   display: grid; gap: 12px;
 }
 .mode-grid { display: grid; gap: 10px; }
+.app-shell > *,
+.streak-page > * {
+  min-width: 0;
+}
+
+.streak-page {
+  display: grid;
+  gap: 16px;
+}
 
 /* ─── Buttons ────────────────────────────────────────────────────────── */
 
@@ -451,6 +501,7 @@ input, textarea { color: var(--text); }
   letter-spacing: 0.01em;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  will-change: transform;
 }
 
 .button::after {
@@ -1003,6 +1054,7 @@ input, textarea { color: var(--text); }
     0 0 0 1px rgba(87, 199, 255, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.09);
   animation: source-sheet-in 0.24s cubic-bezier(0.2, 0.9, 0.22, 1) both;
+  will-change: transform, opacity;
 }
 
 .source-picker-header,
@@ -1140,6 +1192,7 @@ input, textarea { color: var(--text); }
   width: min(100%, 760px); max-height: calc(100dvh - 32px); overflow-y: auto; overflow-x: hidden;
   background: var(--panel-strong); border: 1px solid var(--panel-border);
   border-radius: 28px; box-shadow: var(--shadow-lg);
+  will-change: transform, opacity;
 }
 .entry-modal-header { margin-bottom: 14px; }
 .entry-source-block {
@@ -1487,6 +1540,7 @@ input, textarea { color: var(--text); }
     inset 0 -12px 22px rgba(127, 35, 10, 0.24);
   transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.28s ease;
   animation: none;
+  will-change: transform, opacity;
 }
 
 .radial-nav-center:active {
@@ -1545,6 +1599,7 @@ input, textarea { color: var(--text); }
     background 0.24s ease;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
+  will-change: transform, opacity;
 }
 
 .radial-nav-segment[data-position="top"],
@@ -2565,6 +2620,12 @@ input, textarea { color: var(--text); }
   100% { transform: perspective(900px) rotateX(72deg) rotateZ(-1.5deg) scale(1.78) translateY(17%); }
 }
 
+@keyframes ambient-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(22px, -18px, 0) scale(1.08); }
+  100% { transform: translate3d(-18px, 20px, 0) scale(0.96); }
+}
+
 /* ─── Responsive ─────────────────────────────────────────────────────── */
 
 @media (min-width: 640px) {
@@ -2699,6 +2760,7 @@ input, textarea { color: var(--text); }
   .app-atmosphere-noise,
   .app-atmosphere-prism,
   .app-atmosphere-sheen,
+  .app-ambient-orb,
   .app-frame::before,
   .app-frame::after,
   .streak-glow-ring,
@@ -3010,6 +3072,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .app-ambient-orb,
   .app-frame::before,
   .app-frame::after,
   .hero-card,

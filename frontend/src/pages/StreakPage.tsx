@@ -1,10 +1,11 @@
-import { CSSProperties } from "react";
+import { CSSProperties, useRef } from "react";
 
 import Button from "../components/Button";
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import StreakTierMark from "../components/StreakTierMark";
+import { useGsapProgress } from "../hooks/useGsapMotion";
 import {
   DailyVocabularySuggestion,
   DailyVocabularySuggestionItem,
@@ -449,6 +450,16 @@ function StreakPage({
   savedSuggestionTexts,
   blacklistedSuggestionTexts,
 }: StreakPageProps) {
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useGsapProgress(pageRef, [
+    streak?.words_added_today,
+    streak?.words_learned_today,
+    streak?.elite_today_complete,
+    streak?.elite_current_streak_days,
+    suggestion?.suggestions.length,
+  ]);
+
   if (isLoading) {
     return <LoadingState message="Loading your streak..." />;
   }
@@ -488,7 +499,7 @@ function StreakPage({
   }
 
   return (
-    <>
+    <div className="streak-page" ref={pageRef}>
       <StreakHero streak={streak} />
       <EliteStreakCard streak={streak} />
       <WeeklyCalendar last14={streak.last_14_days} />
@@ -513,7 +524,7 @@ function StreakPage({
         savedSuggestionTexts={savedSuggestionTexts}
         blacklistedSuggestionTexts={blacklistedSuggestionTexts}
       />
-    </>
+    </div>
   );
 }
 

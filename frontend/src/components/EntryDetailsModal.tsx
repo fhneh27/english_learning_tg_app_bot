@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 
 import { requestVocabularyFollowUp } from "../api/vocabulary";
 import Badge from "./Badge";
@@ -6,6 +6,7 @@ import Button from "./Button";
 import Card from "./Card";
 import Input from "./Input";
 import LoadingState from "./LoadingState";
+import { useGsapModal } from "../hooks/useGsapMotion";
 import { VocabularyEntry, VocabularyFollowUpResponse } from "../types/vocabulary";
 import { formatAnalysisModeLabel, formatSourceLabel, formatStatusLabel } from "../utils/vocabulary";
 
@@ -23,6 +24,7 @@ const PROMPT_SUGGESTIONS = [
 ];
 
 function EntryDetailsModal({ entry, onClose, onFollowUpComplete, tgUserId }: EntryDetailsModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
   const [prompt, setPrompt] = useState("");
   const [followUp, setFollowUp] = useState<VocabularyFollowUpResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,8 +56,10 @@ function EntryDetailsModal({ entry, onClose, onFollowUpComplete, tgUserId }: Ent
     setPrompt(event.target.value);
   }
 
+  useGsapModal(modalRef, [entry.id, Boolean(followUp), isLoading]);
+
   return (
-    <div className="entry-modal-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+    <div className="entry-modal-overlay" role="dialog" aria-modal="true" onClick={onClose} ref={modalRef}>
       <Card className="entry-modal" onClick={(event) => event.stopPropagation()}>
         <div className="entry-modal-header">
           <div>
@@ -167,7 +171,7 @@ function EntryDetailsModal({ entry, onClose, onFollowUpComplete, tgUserId }: Ent
           {followUp ? (
             <div className="follow-up-card">
               <div className="result-card-badges">
-                <Badge tone="neutral">{followUp.follow_up_model || "OpenAI"}</Badge>
+                <Badge tone="neutral">{followUp.follow_up_model || "Gemini"}</Badge>
               </div>
               <p className="follow-up-answer">{followUp.answer_ru}</p>
 

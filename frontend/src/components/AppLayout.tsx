@@ -1,6 +1,7 @@
-import { memo, ReactNode } from "react";
+import { memo, ReactNode, useRef } from "react";
 
 import RadialNav, { AppTab } from "./RadialNav";
+import { useGsapScreenReveal, useGsapTapFeedback } from "../hooks/useGsapMotion";
 import { StreakVisualTier } from "../utils/streak";
 
 type AppLayoutProps = {
@@ -12,8 +13,19 @@ type AppLayoutProps = {
 };
 
 function AppLayout({ activeTab, children, onTabChange, streakCount, streakTier }: AppLayoutProps) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLElement>(null);
+
+  useGsapScreenReveal(shellRef, [activeTab]);
+  useGsapTapFeedback(frameRef, [activeTab, streakCount, streakTier]);
+
   return (
-    <div className="app-frame">
+    <div className="app-frame" ref={frameRef}>
+      <div className="app-ambient" aria-hidden="true">
+        <span className="app-ambient-orb app-ambient-orb-cyan" />
+        <span className="app-ambient-orb app-ambient-orb-fire" />
+        <span className="app-ambient-orb app-ambient-orb-violet" />
+      </div>
       <div className="app-topbar">
         <button
           type="button"
@@ -26,7 +38,9 @@ function AppLayout({ activeTab, children, onTabChange, streakCount, streakTier }
         </button>
       </div>
       <RadialNav activeTab={activeTab} onTabChange={onTabChange} streakCount={streakCount} streakTier={streakTier} />
-      <main className="app-shell">{children}</main>
+      <main className="app-shell" ref={shellRef}>
+        {children}
+      </main>
     </div>
   );
 }

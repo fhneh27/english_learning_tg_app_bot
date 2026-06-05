@@ -1,6 +1,7 @@
-import { memo } from "react";
+import { memo, useRef } from "react";
 
 import StreakTierMark from "./StreakTierMark";
+import { useGsapRadialNav } from "../hooks/useGsapMotion";
 import { StreakVisualTier } from "../utils/streak";
 
 const APP_TABS = ["home", "words", "streak", "media", "music", "settings"] as const;
@@ -82,6 +83,7 @@ function MusicIcon() {
 }
 
 function RadialNav({ activeTab, onTabChange, streakCount, streakTier }: RadialNavProps) {
+  const navRef = useRef<HTMLElement>(null);
   const centerClass = [
     "radial-nav-center",
     `radial-nav-center--${streakTier}`,
@@ -91,8 +93,10 @@ function RadialNav({ activeTab, onTabChange, streakCount, streakTier }: RadialNa
     .join(" ");
   const streakLabel = streakTier === "diamond" ? "Diamond streak" : "Streak";
 
+  useGsapRadialNav(navRef, [activeTab, streakCount, streakTier]);
+
   return (
-    <nav className="radial-nav" aria-label="Primary navigation">
+    <nav className="radial-nav" aria-label="Primary navigation" ref={navRef}>
       <div className="radial-nav-container">
         <div className="radial-nav-shell radial-nav-shell-outer" aria-hidden="true" />
         <div className="radial-nav-shell radial-nav-shell-inner" aria-hidden="true" />
@@ -101,6 +105,7 @@ function RadialNav({ activeTab, onTabChange, streakCount, streakTier }: RadialNa
         <button
           type="button"
           className={centerClass}
+          data-gsap-nav-item
           onClick={() => onTabChange("streak")}
           aria-label={`${streakLabel} — ${streakCount} days`}
           aria-current={activeTab === "streak" ? "page" : undefined}
@@ -121,6 +126,7 @@ function RadialNav({ activeTab, onTabChange, streakCount, streakTier }: RadialNa
               key={tab}
               type="button"
               data-position={position}
+              data-gsap-nav-item
               className={isActive ? `radial-nav-segment ${accentClass} active` : `radial-nav-segment ${accentClass}`}
               onClick={() => onTabChange(tab)}
               aria-label={label}

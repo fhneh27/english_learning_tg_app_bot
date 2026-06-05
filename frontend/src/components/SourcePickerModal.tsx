@@ -1,8 +1,9 @@
-import { ChangeEvent } from "react";
+import { ChangeEvent, useRef } from "react";
 
 import Button from "./Button";
 import Card from "./Card";
 import Input from "./Input";
+import { useGsapModal } from "../hooks/useGsapMotion";
 import { MediaCard, MediaSearchFilter, MediaSearchItem } from "../types/media";
 import { MusicTrackSearchItem } from "../types/music";
 
@@ -67,11 +68,14 @@ function SourcePickerModal({
   isMediaSearching,
   isMusicSearching,
 }: SourcePickerModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
   const isMedia = mode === "media";
   const canApply = isMedia ? Boolean(selectedMedia) : Boolean(selectedMusicTrack);
 
+  useGsapModal(modalRef, [mode, mediaResults.length, musicResults.length, Boolean(selectedMedia), Boolean(selectedMusicTrack)]);
+
   return (
-    <div className="source-picker-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+    <div className="source-picker-overlay" role="dialog" aria-modal="true" onClick={onClose} ref={modalRef}>
       <Card className="source-picker-modal" onClick={(event) => event.stopPropagation()}>
         <div className="source-picker-header">
           <div>
