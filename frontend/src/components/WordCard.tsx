@@ -30,8 +30,8 @@ function WordCard({ entry, onDelete, onIncreaseRepeat, onMarkLearned, onOpenDeta
     <Card as="article" className={`word-card ${statusClass}`}>
       <button type="button" className="word-card-main" onClick={() => onOpenDetails(entry.id)}>
         <div className="word-card-head">
-          <div>
-            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800 }}>{entry.original_text}</h3>
+          <div className="word-card-title-block">
+            <h3 className="word-card-title">{entry.original_text}</h3>
             {entry.transcription ? <p className="word-card-subtitle">{entry.transcription}</p> : null}
           </div>
           <div className="word-card-badges">
@@ -43,7 +43,7 @@ function WordCard({ entry, onDelete, onIncreaseRepeat, onMarkLearned, onOpenDeta
         <p className="word-card-translation">{entry.translation_ru}</p>
         <p className="word-card-meaning">{entry.meaning_ru}</p>
         {hasSourceMedia ? (
-          <div className="word-card-source-row">
+          <div className={entry.source_image_url ? "word-card-source-row has-artwork" : "word-card-source-row"}>
             {entry.source_image_url ? (
               <img
                 className="source-artwork-thumb"

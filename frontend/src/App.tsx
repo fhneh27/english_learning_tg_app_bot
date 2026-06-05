@@ -1236,7 +1236,7 @@ function App() {
                     className="recent-item"
                     onClick={() => setSelectedEntryId(entry.id)}
                   >
-                    <div className="recent-item-main">
+                    <div className={entry.source_image_url ? "recent-item-main has-thumb" : "recent-item-main"}>
                       {entry.source_image_url ? (
                         <img
                           className="recent-item-thumb"
