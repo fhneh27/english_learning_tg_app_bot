@@ -1,7 +1,7 @@
 import { memo, ReactNode, useRef } from "react";
 
 import RadialNav, { AppTab } from "./RadialNav";
-import { useGsapScreenReveal, useGsapTapFeedback } from "../hooks/useGsapMotion";
+import { useGsapAmbientBackground, useGsapScreenReveal, useGsapTapFeedback } from "../hooks/useGsapMotion";
 import { StreakVisualTier } from "../utils/streak";
 
 type AppLayoutProps = {
@@ -14,14 +14,23 @@ type AppLayoutProps = {
 
 function AppLayout({ activeTab, children, onTabChange, streakCount, streakTier }: AppLayoutProps) {
   const frameRef = useRef<HTMLDivElement>(null);
+  const ambientRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLElement>(null);
 
+  useGsapAmbientBackground(ambientRef, []);
   useGsapScreenReveal(shellRef, [activeTab]);
   useGsapTapFeedback(frameRef, [activeTab, streakCount, streakTier]);
 
   return (
     <div className="app-frame" ref={frameRef}>
-      <div className="app-ambient" aria-hidden="true">
+      <div className="app-ambient" aria-hidden="true" ref={ambientRef}>
+        <span className="app-ambient-mesh" />
+        <span className="app-ambient-flow app-ambient-flow-a" />
+        <span className="app-ambient-flow app-ambient-flow-b" />
+        <span className="app-ambient-flow app-ambient-flow-c" />
+        <span className="app-ambient-glint app-ambient-glint-one" />
+        <span className="app-ambient-glint app-ambient-glint-two" />
+        <span className="app-ambient-vignette" />
         <span className="app-ambient-orb app-ambient-orb-cyan" />
         <span className="app-ambient-orb app-ambient-orb-fire" />
         <span className="app-ambient-orb app-ambient-orb-violet" />

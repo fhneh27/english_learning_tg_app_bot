@@ -3236,3 +3236,290 @@ body {
     animation: none !important;
   }
 }
+
+/* UX polish v3: animated Telegram Mini App atmosphere */
+body {
+  background:
+    radial-gradient(circle at 18% -10%, rgba(87, 199, 255, 0.13), transparent 34%),
+    radial-gradient(circle at 94% 18%, rgba(255, 122, 61, 0.1), transparent 28%),
+    linear-gradient(180deg, #050912 0%, #08111f 46%, #05070d 100%);
+}
+
+.app-frame {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 22%),
+    radial-gradient(circle at 50% 0%, rgba(87, 199, 255, 0.06), transparent 44%);
+}
+
+.app-ambient {
+  contain: layout paint style;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(87, 199, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 82% 20%, rgba(184, 140, 255, 0.09), transparent 32%),
+    linear-gradient(180deg, rgba(6, 10, 20, 0.4), rgba(4, 7, 12, 0.78));
+}
+
+.app-ambient-flow,
+.app-ambient-mesh,
+.app-ambient-glint,
+.app-ambient-vignette {
+  position: absolute;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
+.app-ambient-flow {
+  width: min(82vw, 460px);
+  height: min(82vw, 460px);
+  border-radius: 999px;
+  filter: blur(34px);
+  opacity: 0.46;
+  mix-blend-mode: screen;
+}
+
+.app-ambient-flow-a {
+  top: -11%;
+  left: -28%;
+  background:
+    radial-gradient(circle at 42% 38%, rgba(87, 199, 255, 0.54), transparent 58%),
+    radial-gradient(circle at 62% 66%, rgba(63, 214, 199, 0.22), transparent 54%);
+}
+
+.app-ambient-flow-b {
+  top: 19%;
+  right: -34%;
+  background:
+    radial-gradient(circle at 42% 42%, rgba(255, 122, 61, 0.34), transparent 56%),
+    radial-gradient(circle at 64% 66%, rgba(184, 140, 255, 0.26), transparent 58%);
+  opacity: 0.4;
+}
+
+.app-ambient-flow-c {
+  left: 8%;
+  bottom: -22%;
+  background:
+    radial-gradient(circle at 48% 42%, rgba(77, 227, 155, 0.28), transparent 52%),
+    radial-gradient(circle at 68% 56%, rgba(87, 199, 255, 0.28), transparent 58%);
+  opacity: 0.32;
+}
+
+.app-ambient-mesh {
+  inset: -8%;
+  opacity: 0.19;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(circle at 50% 26%, black 0%, transparent 72%);
+}
+
+.app-ambient-glint {
+  width: 118px;
+  height: 1px;
+  border-radius: 999px;
+  opacity: 0.22;
+  background: linear-gradient(90deg, transparent, rgba(191, 234, 255, 0.72), transparent);
+  box-shadow: 0 0 28px rgba(87, 199, 255, 0.28);
+}
+
+.app-ambient-glint-one {
+  top: 18%;
+  right: 12%;
+  rotate: -22deg;
+}
+
+.app-ambient-glint-two {
+  left: 8%;
+  bottom: 28%;
+  width: 92px;
+  rotate: 18deg;
+}
+
+.app-ambient-vignette {
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 0%, transparent 46%, rgba(0, 0, 0, 0.38) 100%),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.18) 100%);
+}
+
+.app-ambient-orb {
+  opacity: 0.1;
+  filter: blur(22px);
+}
+
+.app-frame::before {
+  opacity: 0.34;
+  mix-blend-mode: screen;
+}
+
+.app-frame::after {
+  opacity: 0.22;
+}
+
+.app-shell {
+  gap: 18px;
+}
+
+.card,
+.page-header,
+.entry-modal {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(221, 237, 255, 0.14);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.085) 0%, rgba(255, 255, 255, 0.034) 42%, rgba(255, 255, 255, 0.018) 100%),
+    rgba(10, 16, 29, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 18px 50px rgba(0, 0, 0, 0.32),
+    0 0 0 1px rgba(87, 199, 255, 0.025);
+  backdrop-filter: blur(16px) saturate(1.12);
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+}
+
+.card::before,
+.page-header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(125, 213, 255, 0.44), rgba(244, 195, 93, 0.18), transparent);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.hero-card {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(87, 199, 255, 0.17), transparent 38%),
+    radial-gradient(circle at 88% 16%, rgba(255, 122, 61, 0.14), transparent 34%),
+    linear-gradient(160deg, rgba(17, 27, 46, 0.92), rgba(9, 14, 26, 0.88));
+  border-color: rgba(125, 213, 255, 0.24);
+}
+
+.input-control {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018)),
+    rgba(4, 9, 18, 0.78);
+  border-color: rgba(221, 237, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.input-control:focus {
+  border-color: rgba(125, 213, 255, 0.78);
+  box-shadow:
+    0 0 0 4px rgba(87, 199, 255, 0.13),
+    0 18px 42px rgba(0, 0, 0, 0.28),
+    0 0 42px rgba(87, 199, 255, 0.09);
+}
+
+.button,
+.filter-chip,
+.mode-option,
+.destination-option,
+.recent-item,
+.list-row-button,
+.music-search-item,
+.music-selected-card,
+.source-picker-row {
+  transition:
+    transform 0.18s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.button-primary {
+  background:
+    linear-gradient(135deg, #9fe7ff 0%, #57c7ff 34%, #2f91d8 72%, #2461a8 100%);
+  box-shadow:
+    0 16px 38px rgba(47, 145, 216, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.button-primary:hover:not(:disabled) {
+  box-shadow:
+    0 20px 46px rgba(47, 145, 216, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.filter-chip.active,
+.mode-option.active,
+.destination-option.active {
+  border-color: rgba(125, 213, 255, 0.48);
+  background:
+    linear-gradient(180deg, rgba(87, 199, 255, 0.18), rgba(87, 199, 255, 0.08)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.word-card,
+.media-card,
+.music-selected-card,
+.recent-item {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 14px 36px rgba(0, 0, 0, 0.22);
+}
+
+.word-card:hover,
+.media-card:hover,
+.recent-item:hover {
+  border-color: rgba(125, 213, 255, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 44px rgba(0, 0, 0, 0.28),
+    0 0 34px rgba(87, 199, 255, 0.055);
+}
+
+.loading-state,
+.empty-state {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@media (max-width: 639px) {
+  .app-ambient-flow {
+    width: 360px;
+    height: 360px;
+    filter: blur(30px);
+    opacity: 0.36;
+  }
+
+  .app-ambient-mesh {
+    background-size: 34px 34px;
+    opacity: 0.14;
+  }
+
+  .app-ambient-glint {
+    opacity: 0.16;
+  }
+
+  .card,
+  .page-header,
+  .entry-modal {
+    backdrop-filter: blur(12px) saturate(1.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  }
+}
+
+@media (max-width: 767px) {
+  .word-card:hover,
+  .media-card:hover,
+  .recent-item:hover,
+  .card:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-ambient-flow,
+  .app-ambient-mesh,
+  .app-ambient-glint,
+  .app-frame::before,
+  .app-frame::after {
+    animation: none !important;
+    transform: none !important;
+  }
+}
