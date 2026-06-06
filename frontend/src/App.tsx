@@ -1217,6 +1217,16 @@ function App() {
             </>
           ) : null}
 
+          <Card className="voice-hint-card">
+            <p className="section-title">Add by voice</p>
+            <p className="detail-line">
+              You can also send a <strong>voice message</strong> directly to the bot instead of typing.
+            </p>
+            <p className="detail-line">
+              Try: <em>"I learned shallow from a song"</em> or <em>"What does gring mean in slang?"</em>
+            </p>
+          </Card>
+
           <Card>
             <div className="card-heading">
               <div>

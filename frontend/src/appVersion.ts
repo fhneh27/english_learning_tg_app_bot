@@ -1,1 +1,1 @@
-export const APP_DISPLAY_VERSION = 7;
+export const APP_DISPLAY_VERSION = 8;
