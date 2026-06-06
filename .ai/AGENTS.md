@@ -277,3 +277,107 @@ The MVP is done when:
 Prioritize a working clean MVP over a big unfinished system.
 
 Make the project understandable, stable, and easy to continue.
+---
+
+## 16. Frontend UX and Animation Rules
+
+The frontend is an important part of the portfolio value of this project.
+
+The goal is not only functionality but also a polished user experience.
+
+### Design philosophy
+
+The application should feel:
+
+* modern
+* premium
+* smooth
+* mobile-first
+* visually polished
+* comfortable to use
+* portfolio-quality
+
+Avoid generic "student project" UI.
+
+### GSAP
+
+Use GSAP for advanced animations.
+
+Preferred packages:
+
+```bash
+gsap
+@gsap/react
+```
+
+For React applications:
+
+* prefer `useGSAP()`
+* clean up animations properly
+* use reusable animation helpers where appropriate
+
+### Animation principles
+
+Animations must improve UX.
+
+Good uses:
+
+* page transitions
+* screen enter animations
+* modal open/close transitions
+* bottom navigation transitions
+* active tab indicators
+* card appearance animations
+* staggered list animations
+* success state animations
+* progress animations
+* loading state animations
+* micro-interactions for buttons
+
+Avoid:
+
+* excessive animation
+* distracting effects
+* long delays
+* heavy animations on every element
+* animations that reduce performance
+
+### Performance
+
+Telegram Mini Apps must remain responsive.
+
+Prefer animating:
+
+* opacity
+* transform
+* translate
+* scale
+* rotation
+
+Avoid animating layout-heavy properties when possible.
+
+### UX Improvements
+
+When improving frontend:
+
+1. Analyze the current UI first.
+2. Improve the existing interface before creating new components.
+3. Keep navigation intuitive.
+4. Improve spacing and hierarchy.
+5. Improve visual feedback.
+6. Improve loading states.
+7. Improve empty states.
+8. Improve success/error states.
+9. Keep mobile usability as a priority.
+
+### Working Process
+
+Before implementing frontend changes:
+
+1. Inspect the current frontend structure.
+2. Identify UX problems.
+3. Create a short improvement plan.
+4. Implement improvements incrementally.
+5. Explain what was changed.
+
+The goal is to make the application feel like a production-quality product rather than a basic MVP.
