@@ -26,8 +26,12 @@ async def start_command(message: Message) -> None:
             await session.commit()
 
     text = (
-        "Send me an English word or phrase.\n"
-        "I will explain it with OpenAI, save it, and help you review it later.\n"
+        "Send me an English word or phrase — or a <b>voice message</b>.\n\n"
+        "Voice examples:\n"
+        "• <i>\"I learned the word compose from Twilight, season 3\"</i>\n"
+        "• <i>\"What does shallow mean in a song?\"</i>\n"
+        "• <i>\"What does gring mean in slang?\"</i>\n\n"
+        "I will explain it with AI, save it, and help you review it later.\n"
         "Open the Mini App to browse your vocabulary."
     )
     await message.answer(
@@ -47,7 +51,11 @@ async def help_command(message: Message) -> None:
         "/start - show how the bot works\n"
         "/help - show this help\n"
         "/app - open the Mini App\n\n"
-        "You can also send any English word or phrase directly.",
+        "You can send an English word or phrase as text or as a <b>voice message</b>.\n\n"
+        "Voice message examples:\n"
+        "• <i>\"I learned the word compose from Twilight, season 3, episode 4\"</i>\n"
+        "• <i>\"What does gring mean in slang?\"</i>\n"
+        "• <i>\"Add the word shallow from a song\"</i>",
         reply_markup=build_app_inline_keyboard(),
     )
 
