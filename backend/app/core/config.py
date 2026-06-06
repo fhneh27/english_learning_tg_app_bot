@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(alias="OPENAI_API_KEY")
     openai_model: str = Field(alias="OPENAI_MODEL")
     openai_timeout_seconds: int = Field(alias="OPENAI_TIMEOUT_SECONDS")
+    openai_transcription_model: str = Field(default="whisper-1", alias="OPENAI_TRANSCRIPTION_MODEL")
     tmdb_api_key: str = Field(default="", alias="TMDB_API_KEY")
     tmdb_base_url: str = Field(default="https://api.themoviedb.org/3", alias="TMDB_BASE_URL")
     tmdb_image_base_url: str = Field(default="https://image.tmdb.org/t/p/w500", alias="TMDB_IMAGE_BASE_URL")
