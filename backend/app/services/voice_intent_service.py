@@ -22,6 +22,7 @@ The user is learning English vocabulary. They may say something like:
 - "I learned the word compose from the series Twilight, season 3, episode 4"
 - "What does gring mean in slang?"
 - "Add the word shallow from a song"
+- "put someone on a map, это фраза из песни Lil Peep veins"
 - Just a single word: "compose"
 
 Your job is to detect:

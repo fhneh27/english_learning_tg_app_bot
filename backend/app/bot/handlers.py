@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from aiogram import F, Router
@@ -15,18 +16,26 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
-@router.message(Command("start"))
-async def start_command(message: Message) -> None:
-    if message.from_user is not None:
+async def _register_user_background(
+    tg_user_id: int,
+    username: str | None,
+    first_name: str | None,
+) -> None:
+    try:
         async with AsyncSessionLocal() as session:
             user_repository = UserRepository(session)
             await user_repository.upsert_user(
-                tg_user_id=message.from_user.id,
-                username=message.from_user.username,
-                first_name=message.from_user.first_name,
+                tg_user_id=tg_user_id,
+                username=username,
+                first_name=first_name,
             )
             await session.commit()
+    except Exception:
+        logger.exception("Background user registration failed for tg_user_id=%s", tg_user_id)
 
+
+@router.message(Command("start"))
+async def start_command(message: Message) -> None:
     text = (
         "Send me an English word or phrase — or a <b>voice message</b>.\n\n"
         "Voice examples:\n"
@@ -44,6 +53,15 @@ async def start_command(message: Message) -> None:
         "The Mini App button is also pinned below for quick access.",
         reply_markup=build_app_reply_keyboard(),
     )
+
+    if message.from_user is not None:
+        asyncio.create_task(
+            _register_user_background(
+                tg_user_id=message.from_user.id,
+                username=message.from_user.username,
+                first_name=message.from_user.first_name,
+            )
+        )
 
 
 @router.message(Command("help"))

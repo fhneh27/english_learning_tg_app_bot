@@ -27,47 +27,99 @@ class VoiceMusicMatcherService:
         artist_name: str | None,
         song_title: str | None,
         media_title: str | None = None,
+        *,
+        search_hint: str | None = None,
     ) -> MusicMatchResult:
-        query = self._build_search_query(artist_name, song_title, media_title)
-        if not query:
-            return MusicMatchResult()
-
-        try:
-            candidates = await self.catalog_service.search_tracks(query, limit=5)
-        except MusicCatalogServiceError:
-            logger.exception("MusicBrainz search failed for query=%r", query)
-            return MusicMatchResult()
-
-        if not candidates:
-            logger.info("No music candidates for query=%r", query)
+        queries = self._build_search_queries(artist_name, song_title, media_title, search_hint)
+        if not queries:
             return MusicMatchResult()
 
         needle_song = self._normalize(song_title or media_title or "")
         needle_artist = self._normalize(artist_name or "")
 
-        # Pass 1: exact normalized title + artist match.
-        for track in candidates:
-            if self._is_exact_match(track, needle_song, needle_artist):
-                logger.info("Music exact match: %s - %s", track.artist_name, track.title)
-                return MusicMatchResult(track=track)
+        for query in queries:
+            try:
+                candidates = await self.catalog_service.search_tracks(query, limit=8)
+            except MusicCatalogServiceError:
+                logger.exception("MusicBrainz search failed for query=%r", query)
+                continue
 
-        # Pass 2: contains match on title and artist.
-        for track in candidates:
-            if self._is_contains_match(track, needle_song, needle_artist):
-                logger.info("Music contains match: %s - %s", track.artist_name, track.title)
-                return MusicMatchResult(track=track)
+            if not candidates:
+                logger.info("No music candidates for query=%r", query)
+                continue
 
-        logger.info("No music match for query=%r", query)
+            matched = self._pick_best_match(candidates, needle_song, needle_artist, query)
+            if matched is not None:
+                logger.info("Music match via query=%r: %s - %s", query, matched.artist_name, matched.title)
+                return MusicMatchResult(track=matched)
+
+        logger.info("No music match for queries=%r", queries)
         return MusicMatchResult()
 
+    def _pick_best_match(
+        self,
+        candidates: list[MusicTrackSearchItemResponse],
+        needle_song: str,
+        needle_artist: str,
+        query: str,
+    ) -> MusicTrackSearchItemResponse | None:
+        for track in candidates:
+            if self._is_exact_match(track, needle_song, needle_artist):
+                return track
+
+        for track in candidates:
+            if self._is_contains_match(track, needle_song, needle_artist):
+                return track
+
+        if needle_song:
+            for track in candidates:
+                title = track.title.lower().strip()
+                if needle_song in title or title in needle_song:
+                    if not needle_artist:
+                        return track
+                    artist = track.artist_name.lower().strip()
+                    if needle_artist in artist or artist in needle_artist:
+                        return track
+
+        query_tokens = [token for token in self._normalize(query).split() if len(token) >= 3]
+        if query_tokens:
+            for track in candidates:
+                haystack = f"{track.title} {track.artist_name}".lower()
+                if all(token in haystack for token in query_tokens):
+                    return track
+
+        return None
+
     @staticmethod
-    def _build_search_query(
+    def _build_search_queries(
         artist_name: str | None,
         song_title: str | None,
         media_title: str | None,
-    ) -> str:
-        parts = [part.strip() for part in (artist_name, song_title or media_title) if part and part.strip()]
-        return " ".join(parts)
+        search_hint: str | None,
+    ) -> list[str]:
+        queries: list[str] = []
+        artist = (artist_name or "").strip()
+        song = (song_title or media_title or "").strip()
+        hint = (search_hint or "").strip()
+
+        if artist and song:
+            queries.append(f'artist:"{artist}" AND recording:"{song}"')
+            queries.append(f"{artist} {song}")
+        elif song:
+            queries.append(f'recording:"{song}"')
+            queries.append(song)
+        elif artist:
+            queries.append(f'artist:"{artist}"')
+            queries.append(artist)
+
+        if hint and hint not in queries:
+            queries.append(hint)
+
+        deduped: list[str] = []
+        for query in queries:
+            if query and query not in deduped:
+                deduped.append(query)
+        return deduped
 
     @staticmethod
     def _normalize(value: str) -> str:

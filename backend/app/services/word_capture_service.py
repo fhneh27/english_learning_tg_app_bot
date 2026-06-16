@@ -1,9 +1,15 @@
 import logging
+import re
 from dataclasses import dataclass, field
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.vocabulary import VocabularyEntry
+from app.services.music_context_heuristics import (
+    enrich_intent_with_music_heuristics,
+    extract_music_search_hint,
+    text_mentions_music,
+)
 from app.services.openai_service import OpenAIServiceError
 from app.services.voice_intent_service import VoiceIntent, VoiceIntentError, VoiceIntentService
 from app.services.voice_media_matcher_service import VoiceMediaMatcherService
@@ -57,20 +63,29 @@ class WordCaptureService:
                 )
             )
 
+        intent = enrich_intent_with_music_heuristics(cleaned, intent)
+        intent = self._recover_word_from_mixed_message(cleaned, intent)
+
         if intent.confidence == "low" or intent.word_or_phrase is None:
-            if allow_legacy_fallback:
+            if allow_legacy_fallback and not text_mentions_music(cleaned):
                 return await self._legacy_save(tg_user_id, cleaned)
-            return WordCaptureResult(
-                error_message=(
-                    "I could not clearly detect the word.\n"
-                    "Please send it again or type the word manually."
-                ),
-                intent=intent,
-            )
+            if intent.word_or_phrase is None:
+                return WordCaptureResult(
+                    error_message=(
+                        "I could not clearly detect the word.\n"
+                        "Please send it again or type the word manually."
+                    ),
+                    intent=intent,
+                )
 
-        return await self._save_from_intent(tg_user_id, intent)
+        return await self._save_from_intent(tg_user_id, intent, cleaned)
 
-    async def _save_from_intent(self, tg_user_id: int, intent: VoiceIntent) -> WordCaptureResult:
+    async def _save_from_intent(
+        self,
+        tg_user_id: int,
+        intent: VoiceIntent,
+        raw_text: str,
+    ) -> WordCaptureResult:
         db_source_type, db_analysis_mode = self._map_intent_to_db(intent)
         media_item_id = None
         media_season_id = None
@@ -80,6 +95,7 @@ class WordCaptureService:
         source_label = self._build_music_label(intent)
 
         music_kwargs: dict = {}
+        search_hint = extract_music_search_hint(raw_text)
 
         if db_source_type == "media" and intent.media_title:
             media_result = await self.media_matcher.match(
@@ -102,11 +118,12 @@ class WordCaptureService:
                 db_source_type = "unsorted"
                 media_not_found = True
 
-        elif self._should_match_music(intent):
+        elif self._should_match_music(intent, raw_text):
             music_result = await self.music_matcher.match(
                 artist_name=intent.artist_name,
                 song_title=intent.song_title,
                 media_title=intent.media_title,
+                search_hint=search_hint,
             )
             if music_result.found and music_result.track is not None:
                 track = music_result.track
@@ -171,12 +188,42 @@ class WordCaptureService:
         return WordCaptureResult(ok=True, entry=entry, used_legacy_fallback=True)
 
     @staticmethod
-    def _should_match_music(intent: VoiceIntent) -> bool:
+    def _should_match_music(intent: VoiceIntent, raw_text: str) -> bool:
         if intent.source_type == "music":
             return True
         if intent.media_type == "song":
             return True
-        return bool(intent.song_title or intent.artist_name)
+        if intent.song_title or intent.artist_name:
+            return True
+        return text_mentions_music(raw_text)
+
+    @staticmethod
+    def _recover_word_from_mixed_message(raw_text: str, intent: VoiceIntent) -> VoiceIntent:
+        if intent.word_or_phrase:
+            return intent
+
+        if "," in raw_text:
+            head = raw_text.split(",", 1)[0].strip()
+            if WordCaptureService._looks_english(head):
+                intent.word_or_phrase = head
+                intent.confidence = "high"
+                return intent
+
+        english_match = re.search(r"^([A-Za-z0-9 ,'-]+)", raw_text)
+        if english_match:
+            candidate = english_match.group(1).strip().rstrip(",")
+            if candidate:
+                intent.word_or_phrase = candidate
+                intent.confidence = "high"
+        return intent
+
+    @staticmethod
+    def _looks_english(text: str) -> bool:
+        letters = [char for char in text if char.isalpha()]
+        if not letters:
+            return False
+        ascii_letters = sum(1 for char in letters if ord(char) < 128)
+        return ascii_letters / len(letters) >= 0.7
 
     @staticmethod
     def _map_intent_to_db(intent: VoiceIntent) -> tuple[str, str]:
