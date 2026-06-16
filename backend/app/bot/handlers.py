@@ -1,14 +1,16 @@
-from html import escape
+import logging
 
 from aiogram import F, Router
 from aiogram.filters import Command
-from aiogram.types import Message
+from aiogram.types import ErrorEvent, Message
 
+from app.bot.entry_replies import format_capture_reply
 from app.bot.keyboards import build_app_inline_keyboard, build_app_reply_keyboard
 from app.db.session import AsyncSessionLocal
 from app.repositories.user_repository import UserRepository
-from app.services.openai_service import OpenAIServiceError
-from app.services.vocabulary_service import VocabularyService
+from app.services.word_capture_service import WordCaptureService
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -75,44 +77,23 @@ async def process_text_message(message: Message) -> None:
         return
 
     async with AsyncSessionLocal() as session:
-        service = VocabularyService(session)
+        capture_service = WordCaptureService(session)
         try:
-            entry = await service.create_entry(message.from_user.id, message.text)
-        except ValueError:
-            await message.answer("Please send a non-empty English word or phrase.")
-            return
-        except OpenAIServiceError:
-            await message.answer("OpenAI is unavailable right now. Please try again in a moment.")
-            return
+            result = await capture_service.capture_and_save(
+                message.from_user.id,
+                message.text or "",
+                allow_legacy_fallback=True,
+            )
         except Exception:
+            logger.exception("Unexpected error while saving text entry")
             await message.answer("Something went wrong while saving your entry. Please try again.")
             return
 
-    await message.answer(_format_entry_message(entry))
+    await message.answer(format_capture_reply(result))
 
 
-def _format_entry_message(entry: object) -> str:
-    original = escape(getattr(entry, "original_text", ""))
-    translation = escape(getattr(entry, "translation_ru", ""))
-    meaning = escape(getattr(entry, "meaning_ru", ""))
-    transcription = getattr(entry, "transcription", None)
-    examples: list[dict[str, str]] = getattr(entry, "examples", [])
-
-    sections = [f"<b>{original}</b>", f"🇷🇺 {translation}"]
-
-    if transcription:
-        sections.append(f"<i>{escape(transcription)}</i>")
-
-    sections.append(f"<b>Meaning:</b>\n{meaning}")
-
-    if examples:
-        lines = ["<b>Examples:</b>"]
-        for index, example in enumerate(examples[:2], start=1):
-            lines.append(
-                f"{index}. {escape(example.get('en', ''))}\n"
-                f"   {escape(example.get('ru', ''))}"
-            )
-        sections.append("\n".join(lines))
-
-    sections.append("Saved.")
-    return "\n\n".join(sections)
+async def global_error_handler(event: ErrorEvent) -> bool:
+    logger.exception("Unhandled bot error: %s", event.exception)
+    if event.update.message is not None:
+        await event.update.message.answer("Something went wrong. Please try again.")
+    return True

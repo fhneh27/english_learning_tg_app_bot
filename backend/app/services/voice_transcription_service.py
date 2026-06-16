@@ -34,8 +34,9 @@ class VoiceTranscriptionService:
         """Fetch the OGG voice file from Telegram into an in-memory buffer."""
         buffer = io.BytesIO()
         try:
-            tg_file = await bot.get_file(voice.file_id)
-            await bot.download_file(tg_file.file_path, destination=buffer)
+            downloaded = await bot.download(voice.file_id, destination=buffer)
+            if downloaded is not None and downloaded is not buffer:
+                buffer = downloaded
         except Exception as exc:
             logger.exception("Failed to download voice file (file_id=%s)", voice.file_id)
             raise VoiceTranscriptionError("Could not download the voice message.") from exc

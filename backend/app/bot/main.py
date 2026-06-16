@@ -6,7 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.types import BotCommand
 
-from app.bot.handlers import router
+from app.bot.handlers import global_error_handler, router
 from app.bot.voice_handler import voice_router
 from app.core.config import get_settings
 
@@ -20,6 +20,7 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
     dispatcher = Dispatcher()
+    dispatcher.errors.register(global_error_handler)
     # Voice handler must be registered before the generic text handler.
     dispatcher.include_router(voice_router)
     dispatcher.include_router(router)

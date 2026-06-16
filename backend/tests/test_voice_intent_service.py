@@ -102,7 +102,26 @@ class TestParseIntent:
         assert intent.source_type == "music"
         assert intent.media_title == "A Star Is Born"
         assert intent.media_type == "song"
+        assert intent.song_title == "A Star Is Born"
         assert intent.confidence == "high"
+
+    def test_music_media_title_copied_to_song_title(self):
+        data = {
+            "word_or_phrase": "veins",
+            "source_type": "music",
+            "analysis_mode": "general",
+            "media_title": "Veins",
+            "media_type": "song",
+            "artist_name": "Lil Peep",
+            "song_title": None,
+            "season_number": None,
+            "episode_number": None,
+            "confidence": "high",
+        }
+        intent = self.service._parse_intent(data)
+
+        assert intent.song_title == "Veins"
+        assert intent.artist_name == "Lil Peep"
 
     def test_invalid_source_type_clamped_to_unsorted(self):
         data = {

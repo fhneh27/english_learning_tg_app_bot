@@ -34,7 +34,9 @@ Rules:
 - If you cannot clearly identify a word or phrase, set confidence to "low".
 - Set confidence to "high" only when the word is clearly stated.
 - Normalize word_or_phrase to the base dictionary form (e.g. "composed" → "compose").
-- For media_title, extract only the title, not the season or episode numbers.
+- For media_title, extract only the movie/series title, not season or episode numbers.
+- For music, fill artist_name and song_title separately (e.g. artist "Lil Peep", song "Veins").
+- Input may be Russian, English, or mixed.
 - season_number and episode_number must be integers or null.
 - source_type values: "media" (movie/series/show), "music" (song/artist/album), "slang" (user explicitly says slang), "general" (no special source), "unsorted" (completely unclear).
 - analysis_mode: "slang" if the user asks about slang meaning, otherwise "general".
@@ -47,6 +49,8 @@ Return this exact JSON shape:
   "analysis_mode": "general",
   "media_title": "string or null",
   "media_type": "string or null",
+  "artist_name": "string or null",
+  "song_title": "string or null",
   "season_number": null,
   "episode_number": null,
   "confidence": "high or low"
@@ -62,6 +66,8 @@ class VoiceIntent(BaseModel):
     analysis_mode: str = "general"
     media_title: str | None = None
     media_type: str | None = None
+    artist_name: str | None = None
+    song_title: str | None = None
     season_number: int | None = None
     episode_number: int | None = None
     confidence: str = "low"
@@ -160,6 +166,13 @@ class VoiceIntentService:
             intent.word_or_phrase = None
         if intent.media_title is not None and not intent.media_title.strip():
             intent.media_title = None
+        if intent.artist_name is not None and not intent.artist_name.strip():
+            intent.artist_name = None
+        if intent.song_title is not None and not intent.song_title.strip():
+            intent.song_title = None
+
+        if intent.source_type == "music" and intent.song_title is None and intent.media_title:
+            intent.song_title = intent.media_title
 
         # If word is missing after sanitization, force low confidence.
         if intent.word_or_phrase is None:
