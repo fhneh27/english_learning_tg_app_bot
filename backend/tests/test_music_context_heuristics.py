@@ -34,3 +34,14 @@ def test_extract_music_search_hint_without_quotes():
     raw = "put someone on a map, это фраза из песни лил пипа veins"
     hint = extract_music_search_hint(raw)
     assert hint == "Lil Peep veins"
+
+
+def test_enrich_cobain_message_without_comma():
+    intent = VoiceIntent(word_or_phrase=None, source_type="general", confidence="low")
+    raw = "We had all of it planned out из песни лил пипа cobain"
+
+    enriched = enrich_intent_with_music_heuristics(raw, intent)
+
+    assert enriched.source_type == "music"
+    assert enriched.song_title == "cobain"
+    assert enriched.artist_name == "Lil Peep"

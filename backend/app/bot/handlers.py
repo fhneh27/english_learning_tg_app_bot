@@ -5,6 +5,7 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import ErrorEvent, Message
 
+from app.bot.bot_version import BOT_DISPLAY_VERSION
 from app.bot.entry_replies import format_capture_reply
 from app.bot.keyboards import build_app_inline_keyboard, build_app_reply_keyboard
 from app.db.session import AsyncSessionLocal
@@ -43,7 +44,8 @@ async def start_command(message: Message) -> None:
         "• <i>\"What does shallow mean in a song?\"</i>\n"
         "• <i>\"What does gring mean in slang?\"</i>\n\n"
         "I will explain it with AI, save it, and help you review it later.\n"
-        "Open the Mini App to browse your vocabulary."
+        "Open the Mini App to browse your vocabulary.\n\n"
+        f"<i>Bot version: v{BOT_DISPLAY_VERSION}</i>"
     )
     await message.answer(
         text,

@@ -202,6 +202,19 @@ class WordCaptureService:
         if intent.word_or_phrase:
             return intent
 
+        music_split = re.split(
+            r"\s+(?:из песни|from (?:the )?song|from song|from)\s+",
+            raw_text,
+            maxsplit=1,
+            flags=re.IGNORECASE,
+        )
+        if len(music_split) == 2:
+            head = music_split[0].strip().rstrip(",")
+            if WordCaptureService._looks_english(head):
+                intent.word_or_phrase = head
+                intent.confidence = "high"
+                return intent
+
         if "," in raw_text:
             head = raw_text.split(",", 1)[0].strip()
             if WordCaptureService._looks_english(head):
