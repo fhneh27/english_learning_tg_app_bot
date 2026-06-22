@@ -3855,10 +3855,10 @@ body {
 .tabbar-inner {
   pointer-events: auto;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   gap: 0;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) 6px 8px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 62px 8px 6px;
   border-radius: 0;
   background: var(--nav-bg);
   border: 1px solid var(--glass-border);
@@ -3940,8 +3940,8 @@ body {
 .tabbar-center {
   position: relative;
   justify-self: center;
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   margin: 0;
   border: 0;
   border-radius: 50%;
@@ -4046,7 +4046,7 @@ body {
 
 @media (min-width: 480px) {
   .tabbar-label { font-size: 0.66rem; }
-  .tabbar-center { width: 54px; height: 54px; }
+  .tabbar-center { width: 60px; height: 60px; }
   .tabbar-center-value { font-size: 1.12rem; }
 }
 
