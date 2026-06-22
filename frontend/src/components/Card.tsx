@@ -1,18 +1,33 @@
 import { HTMLAttributes, ReactNode } from "react";
+import { motion } from "framer-motion";
 
-type CardProps = HTMLAttributes<HTMLElement> & {
+import { cardHover, cardTap, springSoft } from "../lib/motion";
+
+type CardProps = Omit<
+  HTMLAttributes<HTMLElement>,
+  "onAnimationStart" | "onAnimationEnd" | "onAnimationIteration" | "onDrag" | "onDragStart" | "onDragEnd"
+> & {
   as?: "article" | "section" | "div";
   children: ReactNode;
+  /** Disable hover/tap motion (e.g. for purely static surfaces). */
+  interactive?: boolean;
 };
 
-function Card({ as = "section", children, className = "", ...props }: CardProps) {
-  const Element = as;
+function Card({ as = "section", children, className = "", interactive = true, ...props }: CardProps) {
+  const MotionElement = motion[as];
   const classes = ["card", className].filter(Boolean).join(" ");
 
   return (
-    <Element {...props} className={classes}>
+    <MotionElement
+      {...props}
+      className={classes}
+      whileHover={interactive ? cardHover : undefined}
+      whileTap={interactive ? cardTap : undefined}
+      transition={springSoft}
+    >
+      <span className="card-accent-bar" aria-hidden="true" />
       {children}
-    </Element>
+    </MotionElement>
   );
 }
 
