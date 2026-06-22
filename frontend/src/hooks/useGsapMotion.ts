@@ -65,101 +65,13 @@ export function useGsapScreenReveal(scope: RefObject<HTMLElement>, dependencies:
   );
 }
 
-export function useGsapAmbientBackground(scope: RefObject<HTMLElement>, dependencies: unknown[] = []) {
-  useGSAP(
-    () => {
-      if (prefersReducedMotion()) {
-        return;
-      }
-
-      const root = scope.current;
-      if (!root) {
-        return;
-      }
-
-      const flowA = root.querySelector<HTMLElement>(".app-ambient-flow-a");
-      const flowB = root.querySelector<HTMLElement>(".app-ambient-flow-b");
-      const flowC = root.querySelector<HTMLElement>(".app-ambient-flow-c");
-      const mesh = root.querySelector<HTMLElement>(".app-ambient-mesh");
-      const glints = scopedTargets(root, ".app-ambient-glint");
-      const tweens: gsap.core.Tween[] = [];
-
-      if (flowA) {
-        tweens.push(
-          gsap.to(flowA, {
-            x: 28,
-            y: -34,
-            scale: 1.1,
-            rotation: 4,
-            duration: 12,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          })
-        );
-      }
-
-      if (flowB) {
-        tweens.push(
-          gsap.to(flowB, {
-            x: -24,
-            y: 30,
-            scale: 1.08,
-            rotation: -5,
-            duration: 14,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          })
-        );
-      }
-
-      if (flowC) {
-        tweens.push(
-          gsap.to(flowC, {
-            x: 18,
-            y: 24,
-            scale: 1.12,
-            rotation: 3,
-            duration: 16,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          })
-        );
-      }
-
-      if (mesh) {
-        tweens.push(
-          gsap.to(mesh, {
-            x: -18,
-            y: 14,
-            duration: 18,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-          })
-        );
-      }
-
-      if (glints.length > 0) {
-        tweens.push(
-          gsap.to(glints, {
-            autoAlpha: 0.65,
-            y: -12,
-            duration: 2.8,
-            ease: "sine.inOut",
-            stagger: { each: 0.7, repeat: -1, yoyo: true },
-          })
-        );
-      }
-
-      return () => {
-        tweens.forEach((tween) => tween.kill());
-      };
-    },
-    { scope, dependencies, revertOnUpdate: true }
-  );
+export function useGsapAmbientBackground(_scope: RefObject<HTMLElement>, _dependencies: unknown[] = []) {
+  // Performance: the ambient layers are large blurred / mix-blend-mode elements
+  // rendered behind every glass card. Continuously tweening them forced the GPU
+  // to re-rasterize each card's backdrop-filter on every frame (a constant
+  // full-screen load => overheating and stutter on mobile). The layers stay
+  // visible but static now, so backdrop-filter results can be cached. No
+  // perpetual ambient tween is started.
 }
 
 export function useGsapRadialNav(scope: RefObject<HTMLElement>, dependencies: unknown[] = []) {

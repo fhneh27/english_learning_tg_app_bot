@@ -1,0 +1,82 @@
+/*
+ * performance.css — GPU / battery optimization layer.
+ *
+ * Loaded AFTER global.css so it wins the cascade without touching the
+ * original design rules. Nothing here changes layout, colors, spacing or
+ * interaction animations — the app looks identical at rest.
+ *
+ * Root cause it solves:
+ *   The UI kept ~18 infinite CSS animations + 5 infinite GSAP tweens moving
+ *   large blurred / mix-blend-mode layers BEHIND every glass card. Because
+ *   each card uses backdrop-filter: blur(...), the GPU was forced to
+ *   re-rasterize the blur of every visible card on every frame, forever —
+ *   even while idle. On phones (iPhone 14 Pro) this means constant 100% GPU
+ *   load => overheating, stutter and failure to render.
+ *
+ * Strategy: freeze the perpetual decorative motion (so backdrop-filter
+ * surfaces become static and cacheable) and release the permanent
+ * compositing layers, while keeping every one-shot enter/tap/page transition.
+ */
+
+/* ─────────────────────────────────────────────────────────────────────────
+   1. Freeze perpetual (infinite) decorative animations.
+   `animation: none` resets each element to its base frame, so visuals at
+   rest are unchanged. The loading spinner is intentionally left running.
+   ───────────────────────────────────────────────────────────────────────── */
+.app-ambient-orb,
+.app-ambient-flow,
+.app-ambient-mesh,
+.app-ambient-glint,
+.app-frame::before,
+.app-frame::after,
+.hero-card,
+.shimmer-effect,
+.shimmer-effect::before,
+.shimmer-effect::after,
+.streak-progress-bar-fill,
+.streak-diamond-goal-fill,
+.progress-bar-fill,
+.streak-hero-ring-wrap,
+.streak-hero-particles,
+.streak-hero-particle,
+.tabbar-center-glow,
+.tabbar-center::before,
+.radial-nav-center,
+.radial-nav-center-glow,
+.radial-nav-center-pulse-ring,
+.radial-nav-center-emoji,
+.radial-nav-orbit.active,
+.radial-nav-orbit.active .radial-nav-orbit-glow {
+  animation: none !important;
+}
+
+/* Floating streak particles only exist as moving dots; with motion frozen
+   they have no base appearance, so hide them to avoid stray static dots. */
+.streak-hero-particles {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   2. Release permanent GPU compositing layers.
+   The ambient layers reserved GPU memory via will-change for animations that
+   no longer run. Dropping the hint lets the compositor reclaim that memory
+   and stop maintaining a standalone offscreen buffer per layer.
+   ───────────────────────────────────────────────────────────────────────── */
+.app-ambient-flow,
+.app-ambient-mesh,
+.app-ambient-glint,
+.app-ambient-vignette {
+  will-change: auto !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   3. Skip rendering work for off-screen list/grid content while scrolling.
+   Invisible to the user; cuts layout + paint cost for long collections.
+   ───────────────────────────────────────────────────────────────────────── */
+.word-grid,
+.media-grid,
+.music-search-results,
+.recent-list {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
