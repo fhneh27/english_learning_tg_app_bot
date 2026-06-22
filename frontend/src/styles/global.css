@@ -3841,14 +3841,14 @@ body {
   100% { background-position: 220% 0; }
 }
 
-/* ═══ Bottom tab bar ═══ */
+/* ═══ Top navigation bar ═══ */
 .tabbar {
   position: fixed;
-  left: 50%;
-  bottom: max(12px, env(safe-area-inset-bottom, 12px));
-  transform: translateX(-50%);
+  top: max(10px, env(safe-area-inset-top, 10px));
+  left: 10px;
+  right: auto;
+  width: min(calc(100% - 72px), 440px);
   z-index: 100;
-  width: min(calc(100% - 24px), 460px);
   pointer-events: none;
 }
 
@@ -3937,10 +3937,9 @@ body {
 .tabbar-center {
   position: relative;
   justify-self: center;
-  width: 62px;
-  height: 62px;
-  margin: 0 6px;
-  margin-top: -26px;
+  width: 50px;
+  height: 50px;
+  margin: 0 4px;
   border: 0;
   border-radius: 50%;
   background: var(--gradient-primary);
@@ -3950,8 +3949,8 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   box-shadow:
-    0 12px 30px rgba(255, 60, 172, 0.45),
-    0 4px 14px rgba(255, 107, 53, 0.4),
+    0 8px 22px rgba(255, 60, 172, 0.45),
+    0 3px 10px rgba(255, 107, 53, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
@@ -3981,18 +3980,17 @@ body {
 }
 
 .tabbar-center-value {
-  font-size: 1.2rem;
+  font-size: 1.02rem;
   font-weight: 900;
   letter-spacing: -0.03em;
 }
 
 .tabbar-center-label {
-  font-size: 0.56rem;
+  font-size: 0.48rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   opacity: 0.92;
-  margin-top: 1px;
 }
 
 @keyframes streak-pulse {
@@ -4000,15 +3998,50 @@ body {
   50% { opacity: 1; transform: scale(1.15); }
 }
 
-/* Clear space for the fixed bottom nav */
+/* Clear space for the fixed top nav */
 .app-shell {
-  padding-bottom: calc(116px + env(safe-area-inset-bottom, 0px));
+  padding-top: calc(80px + env(safe-area-inset-top, 0px));
+  padding-bottom: 28px;
+}
+
+/* Settings gear: fixed, top-right, aligned with the nav */
+.app-topbar {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top, 10px));
+  right: 12px;
+  left: auto;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  z-index: 101;
+}
+
+.app-settings-button {
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: var(--nav-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.app-settings-button:hover,
+.app-settings-button.active {
+  color: #ff8a5b;
+  border-color: rgba(255, 138, 91, 0.4);
+  background: var(--glass-bg-strong);
 }
 
 @media (min-width: 480px) {
   .tabbar-label { font-size: 0.68rem; }
-  .tabbar-center { width: 66px; height: 66px; }
-  .tabbar-center-value { font-size: 1.3rem; }
+  .tabbar-center { width: 54px; height: 54px; }
+  .tabbar-center-value { font-size: 1.12rem; }
 }
 
 /* ── Reduced motion ── */

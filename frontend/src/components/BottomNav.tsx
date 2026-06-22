@@ -26,13 +26,22 @@ function HomeIcon({ active }: { active: boolean }) {
   return (
     <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M3.75 10.8 12 4l8.25 6.8v8.2a1.5 1.5 0 0 1-1.5 1.5h-4.5v-5.25h-4.5v5.25h-4.5a1.5 1.5 0 0 1-1.5-1.5z"
+        d="M4 11.4 12 4.5l8 6.9"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.8 10v8.2a1.3 1.3 0 0 0 1.3 1.3h9.8a1.3 1.3 0 0 0 1.3-1.3V10"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
         strokeLinejoin="round"
         fill={active ? "currentColor" : "none"}
-        fillOpacity={active ? 0.18 : 0}
+        fillOpacity={active ? 0.14 : 0}
       />
+      <path d="M9.7 19.5V14a1 1 0 0 1 1-1h2.6a1 1 0 0 1 1 1v5.5" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -41,14 +50,14 @@ function WordsIcon({ active }: { active: boolean }) {
   return (
     <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path
-        d="M6 5.25A2.25 2.25 0 0 1 8.25 3H18v15H8.25A2.25 2.25 0 0 0 6 20.25z"
+        d="M12 6.6C10.4 5.1 8.3 4.5 5.4 4.5v13c2.9 0 5 .6 6.6 2.1 1.6-1.5 3.7-2.1 6.6-2.1v-13c-2.9 0-5 .6-6.6 2.1Z"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         strokeLinejoin="round"
         fill={active ? "currentColor" : "none"}
-        fillOpacity={active ? 0.18 : 0}
+        fillOpacity={active ? 0.14 : 0}
       />
-      <path d="M10 7.5h4.75M10 11h4.75" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M12 6.6v13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }
@@ -57,17 +66,17 @@ function MediaIcon({ active }: { active: boolean }) {
   return (
     <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <rect
-        x="4"
-        y="5"
-        width="16"
-        height="14"
-        rx="3"
+        x="3.5"
+        y="5.5"
+        width="17"
+        height="13"
+        rx="3.2"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth="1.8"
         fill={active ? "currentColor" : "none"}
-        fillOpacity={active ? 0.16 : 0}
+        fillOpacity={active ? 0.14 : 0}
       />
-      <path d="M8 5v14M16 5v14M4 9h16M4 15h16" stroke="currentColor" strokeWidth="1.3" opacity="0.85" />
+      <path d="M10.5 9.6 14.8 12l-4.3 2.4z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -75,15 +84,9 @@ function MediaIcon({ active }: { active: boolean }) {
 function MusicIcon({ active }: { active: boolean }) {
   return (
     <svg className="tabbar-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M15.5 5.5v9.2a2.8 2.8 0 1 1-1.6-2.54V7.5l6-1.7v7.4a2.8 2.8 0 1 1-1.6-2.54V3.75z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill={active ? "currentColor" : "none"}
-        fillOpacity={active ? 0.16 : 0}
-      />
+      <path d="M9 17.5V6.6l9.5-2v10.4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <ellipse cx="6.7" cy="17.6" rx="2.3" ry="2" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.18 : 0} stroke="currentColor" strokeWidth="1.8" />
+      <ellipse cx="16.2" cy="15.6" rx="2.3" ry="2" fill={active ? "currentColor" : "none"} fillOpacity={active ? 0.18 : 0} stroke="currentColor" strokeWidth="1.8" />
     </svg>
   );
 }

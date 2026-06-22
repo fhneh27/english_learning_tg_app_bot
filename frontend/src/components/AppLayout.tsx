@@ -68,17 +68,12 @@ function AppLayout({ activeTab, children, onTabChange, streakCount }: AppLayoutP
 function SettingsIcon() {
   return (
     <svg className="app-settings-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.1" stroke="currentColor" strokeWidth="1.8" />
       <path
-        d="M12 8.25a3.75 3.75 0 1 1 0 7.5a3.75 3.75 0 0 1 0-7.5z"
+        d="M12 2.6v2.6M12 18.8v2.6M21.4 12h-2.6M5.2 12H2.6M18.64 5.36l-1.84 1.84M7.2 16.8l-1.84 1.84M18.64 18.64 16.8 16.8M7.2 7.2 5.36 5.36"
         stroke="currentColor"
-        strokeWidth="1.7"
-      />
-      <path
-        d="M19.1 13.15a1.05 1.05 0 0 0 .2 1.16l.04.04a1.5 1.5 0 1 1-2.12 2.12l-.04-.04a1.05 1.05 0 0 0-1.16-.2a1.05 1.05 0 0 0-.63.96v.11a1.5 1.5 0 1 1-3 0v-.11a1.05 1.05 0 0 0-.69-.98a1.05 1.05 0 0 0-1.1.22l-.08.08a1.5 1.5 0 1 1-2.12-2.12l.08-.08a1.05 1.05 0 0 0 .22-1.1a1.05 1.05 0 0 0-.98-.69h-.11a1.5 1.5 0 1 1 0-3h.11a1.05 1.05 0 0 0 .96-.63a1.05 1.05 0 0 0-.2-1.16l-.04-.04a1.5 1.5 0 1 1 2.12-2.12l.04.04a1.05 1.05 0 0 0 1.16.2h.04a1.05 1.05 0 0 0 .59-.95v-.11a1.5 1.5 0 1 1 3 0v.11a1.05 1.05 0 0 0 .63.96a1.05 1.05 0 0 0 1.16-.2l.04-.04a1.5 1.5 0 1 1 2.12 2.12l-.04.04a1.05 1.05 0 0 0-.2 1.16v.04a1.05 1.05 0 0 0 .95.59h.11a1.5 1.5 0 1 1 0 3h-.11a1.05 1.05 0 0 0-.96.63z"
-        stroke="currentColor"
-        strokeWidth="1.3"
+        strokeWidth="1.8"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );
