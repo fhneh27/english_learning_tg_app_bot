@@ -301,6 +301,92 @@ export function useGsapProgress(scope: RefObject<HTMLElement>, dependencies: unk
   );
 }
 
+export function useGsapStreakReveal(scope: RefObject<HTMLElement>, dependencies: unknown[] = []) {
+  useGSAP(
+    () => {
+      const root = scope.current;
+      if (!root) {
+        return;
+      }
+
+      const reduce = prefersReducedMotion();
+
+      // Animated draw of the hero progress ring.
+      const ring = root.querySelector<SVGCircleElement>(".streak-hero-ring-progress");
+      if (ring) {
+        const circ = Number(ring.dataset.circ) || 603.19;
+        const pct = Math.max(0, Math.min(100, Number(ring.dataset.progress) || 0));
+        const target = circ * (1 - pct / 100);
+
+        if (reduce) {
+          gsap.set(ring, { strokeDashoffset: target });
+        } else {
+          gsap.fromTo(
+            ring,
+            { strokeDashoffset: circ },
+            { strokeDashoffset: target, duration: 1.25, ease: "power3.out", delay: 0.1 }
+          );
+        }
+      }
+
+      if (reduce) {
+        return;
+      }
+
+      const center = root.querySelector<HTMLElement>(".streak-ring-center");
+      if (center) {
+        gsap.fromTo(
+          center,
+          { scale: 0.8, autoAlpha: 0 },
+          {
+            scale: 1,
+            autoAlpha: 1,
+            duration: 0.7,
+            ease: "back.out(1.7)",
+            delay: 0.12,
+            clearProps: "transform,opacity,visibility",
+          }
+        );
+      }
+
+      const stats = scopedTargets(root, ".streak-stat-card");
+      if (stats.length > 0) {
+        gsap.fromTo(
+          stats,
+          { y: 18, autoAlpha: 0, scale: 0.97 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            scale: 1,
+            duration: 0.5,
+            ease: "power3.out",
+            stagger: 0.07,
+            clearProps: "transform,opacity,visibility",
+          }
+        );
+      }
+
+      const dots = scopedTargets(root, ".streak-week-day");
+      if (dots.length > 0) {
+        gsap.fromTo(
+          dots,
+          { y: 10, autoAlpha: 0 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.42,
+            ease: "power2.out",
+            stagger: 0.045,
+            delay: 0.1,
+            clearProps: "transform,opacity,visibility",
+          }
+        );
+      }
+    },
+    { scope, dependencies, revertOnUpdate: true }
+  );
+}
+
 export function useGsapTapFeedback(scope: RefObject<HTMLElement>, dependencies: unknown[] = []) {
   useGSAP(
     () => {

@@ -2,10 +2,11 @@ import { CSSProperties, useRef } from "react";
 
 import Button from "../components/Button";
 import Card from "../components/Card";
+import CountUp from "../components/CountUp";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import StreakTierMark from "../components/StreakTierMark";
-import { useGsapProgress } from "../hooks/useGsapMotion";
+import { useGsapProgress, useGsapStreakReveal } from "../hooks/useGsapMotion";
 import {
   DailyVocabularySuggestion,
   DailyVocabularySuggestionItem,
@@ -31,6 +32,9 @@ type StreakPageProps = {
 };
 
 type AccentVariant = "fire" | "gold" | "purple" | "green" | "diamond";
+
+const RING_RADIUS = 96;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 function getTodayStr(): string {
   const now = new Date();
@@ -71,7 +75,7 @@ function StatCard({
   return (
     <Card className={`streak-stat-card streak-stat-card-${variant}`}>
       <div className={`streak-stat-value streak-stat-value-${variant}`}>
-        {value}
+        {typeof value === "number" ? <CountUp value={value} /> : value}
         {unit ? <span className="streak-stat-unit">{unit}</span> : null}
       </div>
       <div className="streak-stat-label">{label}</div>
@@ -79,8 +83,51 @@ function StatCard({
   );
 }
 
+function StreakRing({ tier, progressPct }: { tier: StreakVisualTier; progressPct: number }) {
+  const gradientId = `streak-ring-grad-${tier}`;
+
+  return (
+    <svg className="streak-hero-ring" viewBox="0 0 220 220" aria-hidden="true">
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+          {tier === "diamond" ? (
+            <>
+              <stop offset="0%" stopColor="#9fe7ff" />
+              <stop offset="55%" stopColor="#7ccfff" />
+              <stop offset="100%" stopColor="#c4b5fd" />
+            </>
+          ) : tier === "ember" ? (
+            <>
+              <stop offset="0%" stopColor="#ffd27a" />
+              <stop offset="50%" stopColor="#ff6b35" />
+              <stop offset="100%" stopColor="#ff3cac" />
+            </>
+          ) : (
+            <>
+              <stop offset="0%" stopColor="#9fb2d0" />
+              <stop offset="100%" stopColor="#5c7494" />
+            </>
+          )}
+        </linearGradient>
+      </defs>
+      <circle className="streak-hero-ring-track" cx="110" cy="110" r={RING_RADIUS} />
+      <circle
+        className="streak-hero-ring-progress"
+        cx="110"
+        cy="110"
+        r={RING_RADIUS}
+        stroke={`url(#${gradientId})`}
+        data-progress={progressPct}
+        data-circ={RING_CIRCUMFERENCE.toFixed(2)}
+        style={{ strokeDasharray: RING_CIRCUMFERENCE } as CSSProperties}
+      />
+    </svg>
+  );
+}
+
 function StreakHero({ streak }: { streak: StreakSummary }) {
   const tier = getStreakVisualTier(streak);
+  const progress = getDailyGoalsProgress(streak);
   const isActiveToday = streak.today_actions > 0;
   const heroCount = tier === "diamond" ? streak.elite_current_streak_days : streak.current_streak_days;
   const heroUnit =
@@ -97,15 +144,29 @@ function StreakHero({ streak }: { streak: StreakSummary }) {
       className={`card streak-hero-card streak-hero-card--${tier}`}
       aria-label={`${tierLabel(tier)} hero`}
     >
+      <div className="streak-hero-particles" aria-hidden="true">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <span key={index} className={`streak-hero-particle streak-hero-particle-${index + 1}`} />
+        ))}
+      </div>
+
       <div className="streak-hero-inner">
-        <div className="streak-flame-container">
-          <StreakTierMark tier={tier} className="streak-hero-tier-mark" />
+        <p className="streak-hero-tier-label">{tierLabel(tier)}</p>
+
+        <div className="streak-hero-ring-wrap">
+          <StreakRing tier={tier} progressPct={progress.combinedPct} />
+          <div className="streak-ring-center">
+            <StreakTierMark tier={tier} className="streak-ring-mark" />
+            <div className="streak-hero-number">
+              <CountUp value={heroCount} />
+            </div>
+            <span className="streak-hero-unit">{heroUnit}</span>
+          </div>
         </div>
 
-        <div className="streak-hero-count-block">
-          <p className="streak-hero-tier-label">{tierLabel(tier)}</p>
-          <div className="streak-hero-number">{heroCount}</div>
-          <span className="streak-hero-unit">{heroUnit}</span>
+        <div className="streak-ring-caption">
+          <span className="streak-ring-caption-dot" aria-hidden="true" />
+          Today&apos;s goals · {progress.combinedPct}%
         </div>
 
         <p className="streak-hero-message">
@@ -452,6 +513,14 @@ function StreakPage({
 }: StreakPageProps) {
   const pageRef = useRef<HTMLDivElement>(null);
 
+  const revealDeps = [
+    streak?.current_streak_days,
+    streak?.elite_current_streak_days,
+    streak?.words_added_today,
+    streak?.words_learned_today,
+    streak?.elite_today_complete,
+  ];
+
   useGsapProgress(pageRef, [
     streak?.words_added_today,
     streak?.words_learned_today,
@@ -459,6 +528,8 @@ function StreakPage({
     streak?.elite_current_streak_days,
     suggestion?.suggestions.length,
   ]);
+
+  useGsapStreakReveal(pageRef, revealDeps);
 
   if (isLoading) {
     return <LoadingState message="Loading your streak..." />;
