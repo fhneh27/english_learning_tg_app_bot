@@ -1,7 +1,9 @@
 import { memo, ReactNode, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
-import RadialNav, { AppTab } from "./RadialNav";
-import { useGsapAmbientBackground, useGsapScreenReveal, useGsapTapFeedback } from "../hooks/useGsapMotion";
+import BottomNav, { AppTab } from "./BottomNav";
+import { useGsapAmbientBackground, useGsapTapFeedback } from "../hooks/useGsapMotion";
+import { pageVariants } from "../lib/motion";
 import { StreakVisualTier } from "../utils/streak";
 
 type AppLayoutProps = {
@@ -12,14 +14,12 @@ type AppLayoutProps = {
   streakTier: StreakVisualTier;
 };
 
-function AppLayout({ activeTab, children, onTabChange, streakCount, streakTier }: AppLayoutProps) {
+function AppLayout({ activeTab, children, onTabChange, streakCount }: AppLayoutProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const ambientRef = useRef<HTMLDivElement>(null);
-  const shellRef = useRef<HTMLElement>(null);
 
   useGsapAmbientBackground(ambientRef, []);
-  useGsapScreenReveal(shellRef, [activeTab]);
-  useGsapTapFeedback(frameRef, [activeTab, streakCount, streakTier]);
+  useGsapTapFeedback(frameRef, [activeTab]);
 
   return (
     <div className="app-frame" ref={frameRef}>
@@ -46,10 +46,21 @@ function AppLayout({ activeTab, children, onTabChange, streakCount, streakTier }
           <SettingsIcon />
         </button>
       </div>
-      <RadialNav activeTab={activeTab} onTabChange={onTabChange} streakCount={streakCount} streakTier={streakTier} />
-      <main className="app-shell" ref={shellRef}>
-        {children}
-      </main>
+
+      <AnimatePresence mode="wait">
+        <motion.main
+          key={activeTab}
+          className="app-shell"
+          variants={pageVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+        >
+          {children}
+        </motion.main>
+      </AnimatePresence>
+
+      <BottomNav activeTab={activeTab} onTabChange={onTabChange} streakCount={streakCount} />
     </div>
   );
 }

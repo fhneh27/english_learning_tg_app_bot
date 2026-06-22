@@ -314,7 +314,6 @@ export function useGsapTapFeedback(scope: RefObject<HTMLElement>, dependencies: 
       }
 
       const selector = [
-        ".button",
         ".filter-chip",
         ".mode-option",
         ".destination-option",
@@ -323,8 +322,6 @@ export function useGsapTapFeedback(scope: RefObject<HTMLElement>, dependencies: 
         ".list-row-button",
         ".music-search-item",
         ".source-picker-row",
-        ".radial-nav-center",
-        ".radial-nav-segment",
       ].join(", ");
 
       const findTarget = (event: PointerEvent): HTMLElement | null => {

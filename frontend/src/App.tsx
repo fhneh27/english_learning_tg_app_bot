@@ -1,4 +1,5 @@
 import { ChangeEvent, startTransition, useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 import { useTheme } from "./contexts/ThemeContext";
 import {
@@ -35,7 +36,7 @@ import {
   updateVocabularyProgress,
 } from "./api/vocabulary";
 import AppLayout from "./components/AppLayout";
-import { AppTab } from "./components/RadialNav";
+import { AppTab } from "./components/BottomNav";
 import Button from "./components/Button";
 import Card from "./components/Card";
 import EmptyState from "./components/EmptyState";
@@ -75,6 +76,7 @@ import {
   formatAnalysisModeLabel,
   formatSourceLabel,
 } from "./utils/vocabulary";
+import { listContainer, listItem } from "./lib/motion";
 import { getNavStreakDisplay } from "./utils/streak";
 
 const DEFAULT_DEV_TG_USER_ID = 123456789;
@@ -1238,12 +1240,13 @@ function App() {
             {isLoading ? (
               <LoadingState message="Loading recent words..." />
             ) : recentEntries.length > 0 ? (
-              <div className="recent-list">
+              <motion.div className="recent-list" variants={listContainer} initial="hidden" animate="show">
                 {recentEntries.map((entry) => (
-                  <button
+                  <motion.button
                     key={entry.id}
                     type="button"
                     className="recent-item"
+                    variants={listItem}
                     onClick={() => setSelectedEntryId(entry.id)}
                   >
                     <div className={entry.source_image_url ? "recent-item-main has-thumb" : "recent-item-main"}>
@@ -1259,9 +1262,9 @@ function App() {
                       <span>{entry.translation_ru}</span>
                     </div>
                     <small>{entry.source_label || formatSourceLabel(entry.source_type)}</small>
-                  </button>
+                  </motion.button>
                 ))}
-              </div>
+              </motion.div>
             ) : (
               <EmptyState
                 title="No words saved yet"
