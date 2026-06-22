@@ -1,10 +1,12 @@
 import { ChangeEvent, memo, useDeferredValue, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 
 import Card from "../components/Card";
 import EmptyState from "../components/EmptyState";
 import Input from "../components/Input";
 import LoadingState from "../components/LoadingState";
 import WordCard from "../components/WordCard";
+import { listContainer, listItem } from "../lib/motion";
 import { VocabularyEntry } from "../types/vocabulary";
 import { filterEntries, WordsFilter } from "../utils/vocabulary";
 
@@ -80,18 +82,25 @@ function WordsTab({
       {isLoading ? (
         <LoadingState message="Loading your vocabulary..." />
       ) : filteredWords.length > 0 ? (
-        <div className="word-grid">
+        <motion.div
+          className="word-grid"
+          variants={listContainer}
+          initial="hidden"
+          animate="show"
+          key={`${wordsFilter}-${deferredWordsQuery}`}
+        >
           {filteredWords.map((entry) => (
-            <WordCard
-              key={entry.id}
-              entry={entry}
-              onDelete={onDelete}
-              onIncreaseRepeat={onIncreaseRepeat}
-              onMarkLearned={onMarkLearned}
-              onOpenDetails={onOpenDetails}
-            />
+            <motion.div key={entry.id} variants={listItem}>
+              <WordCard
+                entry={entry}
+                onDelete={onDelete}
+                onIncreaseRepeat={onIncreaseRepeat}
+                onMarkLearned={onMarkLearned}
+                onOpenDetails={onOpenDetails}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <EmptyState
           title="Nothing matches this view"
