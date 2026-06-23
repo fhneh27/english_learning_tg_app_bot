@@ -5,7 +5,7 @@ Send a word to the bot or add it in the app — get a structured learning card, 
 
 > Portfolio project · not a public SaaS · built for learning and demo
 
-![CI](https://github.com/fhneh27/english_learning_tg_app_bot/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/fhneh27/english_learning_tg_app_bot/actions/workflows/ci.yml/badge.svg?branch=test/deploy-check)
 
 ---
 
