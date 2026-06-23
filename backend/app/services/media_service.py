@@ -81,7 +81,7 @@ class MediaService:
 
     async def get_movie_detail(self, item_id: UUID, tg_user_id: int) -> MovieDetailResponse:
         item = await self._require_item(item_id, tg_user_id, "movie")
-        words = await self.media_repository.list_words_for_media_item(item.id)
+        words = await self.media_repository.list_words_for_media_item(item.id, tg_user_id)
         return MovieDetailResponse(
             item=self._to_media_card(item),
             watched_label=f"{item.watched_minutes} / {max(item.runtime_minutes, 0)} min",
@@ -100,11 +100,11 @@ class MediaService:
             1 for episodes in episodes_by_season.values() for episode in episodes if episode.is_watched
         )
 
-        series_words = await self.media_repository.list_words_for_media_item(item.id)
+        series_words = await self.media_repository.list_words_for_media_item(item.id, tg_user_id)
         for season in seasons:
-            series_words.extend(await self.media_repository.list_words_for_season(season.id))
+            series_words.extend(await self.media_repository.list_words_for_season(season.id, tg_user_id))
             for episode in episodes_by_season.get(season.id, []):
-                series_words.extend(await self.media_repository.list_words_for_episode(episode.id))
+                series_words.extend(await self.media_repository.list_words_for_episode(episode.id, tg_user_id))
 
         return SeriesDetailResponse(
             item=self._to_media_card(item),
@@ -124,9 +124,9 @@ class MediaService:
             raise MediaNotFoundError("Season not found.")
 
         episodes = await self.media_repository.list_episodes(season.id)
-        season_words = await self.media_repository.list_words_for_season(season.id)
+        season_words = await self.media_repository.list_words_for_season(season.id, tg_user_id)
         for episode in episodes:
-            season_words.extend(await self.media_repository.list_words_for_episode(episode.id))
+            season_words.extend(await self.media_repository.list_words_for_episode(episode.id, tg_user_id))
 
         return SeasonDetailResponse(
             series_item_id=series_item.id,
@@ -144,7 +144,7 @@ class MediaService:
         if series_item is None or series_item.media_type != "series":
             raise MediaNotFoundError("Episode not found.")
 
-        words = await self.media_repository.list_words_for_episode(episode.id)
+        words = await self.media_repository.list_words_for_episode(episode.id, tg_user_id)
         return EpisodeDetailResponse(
             series_item_id=episode.series_item_id,
             season_id=episode.season_id,
@@ -156,9 +156,9 @@ class MediaService:
     async def get_franchise_detail(self, item_id: UUID, tg_user_id: int) -> FranchiseDetailResponse:
         item = await self._require_item(item_id, tg_user_id, "franchise")
         movies = await self.media_repository.list_franchise_movies(item.id)
-        words = await self.media_repository.list_words_for_franchise(item.id)
+        words = await self.media_repository.list_words_for_franchise(item.id, tg_user_id)
         for movie in movies:
-            words.extend(await self.media_repository.list_words_for_media_item(movie.id))
+            words.extend(await self.media_repository.list_words_for_media_item(movie.id, tg_user_id))
 
         total_runtime = sum(max(movie.runtime_minutes, 0) for movie in movies)
         watched_minutes = sum(max(movie.watched_minutes, 0) for movie in movies)

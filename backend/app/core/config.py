@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field, computed_field
+from pydantic import Field, computed_field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,6 +51,11 @@ class Settings(BaseSettings):
 
     cors_origins_raw: str = Field(alias="CORS_ORIGINS")
 
+    allow_dev_auth_bypass: bool = Field(default=True, alias="ALLOW_DEV_AUTH_BYPASS")
+    dev_tg_user_id: int = Field(default=123456789, alias="DEV_TG_USER_ID")
+    telegram_init_data_max_age_seconds: int = Field(default=86_400, alias="TELEGRAM_INIT_DATA_MAX_AGE_SECONDS")
+    ai_rate_limit_per_hour: int = Field(default=60, alias="AI_RATE_LIMIT_PER_HOUR")
+
     @computed_field
     @property
     def database_url(self) -> str:
@@ -67,6 +72,28 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env.strip().lower() in {"production", "prod"}
+
+    @model_validator(mode="after")
+    def validate_environment(self) -> "Settings":
+        placeholder_tokens = {
+            "your_bot_token_here",
+            "your_openai_api_key_here",
+            "your_gemini_api_key_here",
+        }
+
+        if self.is_production:
+            if self.allow_dev_auth_bypass:
+                raise ValueError("ALLOW_DEV_AUTH_BYPASS must be false in production.")
+            if self.tg_bot_token.strip() in placeholder_tokens:
+                raise ValueError("TG_BOT_TOKEN must be set to a real bot token in production.")
+            if self.openai_api_key.strip() in placeholder_tokens:
+                raise ValueError("OPENAI_API_KEY must be set to a real API key in production.")
+            if not self.cors_origins:
+                raise ValueError("CORS_ORIGINS must include at least one origin in production.")
+            if any(origin.startswith("http://localhost") for origin in self.cors_origins):
+                raise ValueError("Localhost CORS origins are not allowed in production.")
+
+        return self
 
 
 @lru_cache(maxsize=1)

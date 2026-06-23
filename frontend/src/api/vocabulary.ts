@@ -50,7 +50,7 @@ export function requestVocabularyFollowUp(
   tgUserId: number,
   payload: VocabularyFollowUpPayload
 ): Promise<VocabularyFollowUpResponse> {
-  return apiRequest<VocabularyFollowUpResponse>(`/vocabulary/${entryId}/follow-up?tg_user_id=${tgUserId}`, {
+  return apiRequest<VocabularyFollowUpResponse>(`/vocabulary/${entryId}/follow-up`, {
     method: "POST",
     body: JSON.stringify(payload),
     errorMessage: "Could not get a deeper explanation for this entry.",
@@ -58,9 +58,7 @@ export function requestVocabularyFollowUp(
 }
 
 export function fetchVocabularyEntries(params: FetchEntriesParams): Promise<VocabularyEntry[]> {
-  const searchParams = new URLSearchParams({
-    tg_user_id: String(params.tgUserId),
-  });
+  const searchParams = new URLSearchParams();
 
   if (params.q) {
     searchParams.set("q", params.q);
@@ -74,7 +72,8 @@ export function fetchVocabularyEntries(params: FetchEntriesParams): Promise<Voca
     searchParams.set("source_type", params.sourceType);
   }
 
-  return apiRequest<VocabularyEntry[]>(`/vocabulary?${searchParams.toString()}`, {
+  const query = searchParams.toString();
+  return apiRequest<VocabularyEntry[]>(`/vocabulary${query ? `?${query}` : ""}`, {
     method: "GET",
     errorMessage: "Could not load vocabulary entries.",
   });
@@ -85,7 +84,7 @@ export function updateVocabularyProgress(
   tgUserId: number,
   payload: VocabularyProgressPayload
 ): Promise<VocabularyEntry> {
-  return apiRequest<VocabularyEntry>(`/vocabulary/${entryId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<VocabularyEntry>(`/vocabulary/${entryId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
     errorMessage: "Could not update the entry progress.",
@@ -93,7 +92,7 @@ export function updateVocabularyProgress(
 }
 
 export function deleteVocabularyEntry(entryId: string, tgUserId: number): Promise<void> {
-  return apiRequest<void>(`/vocabulary/${entryId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<void>(`/vocabulary/${entryId}`, {
     method: "DELETE",
     errorMessage: "Could not delete the entry.",
   });

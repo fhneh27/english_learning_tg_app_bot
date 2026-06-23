@@ -1,3 +1,5 @@
+import { buildAuthHeaders } from "./auth";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api/v1";
 
 type RequestOptions = RequestInit & {
@@ -8,6 +10,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions): Prom
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...buildAuthHeaders(),
       ...(options.headers || {}),
     },
     ...options,
@@ -18,7 +21,15 @@ export async function apiRequest<T>(path: string, options: RequestOptions): Prom
 
     try {
       const data = (await response.json()) as { detail?: string };
-      detail = data.detail || detail;
+      if (response.status === 401) {
+        detail = "Authentication failed. Reopen the Mini App from Telegram.";
+      } else if (response.status === 403) {
+        detail = "You are not allowed to perform this action.";
+      } else if (response.status === 429) {
+        detail = data.detail || "Too many requests. Please try again later.";
+      } else if (data.detail) {
+        detail = data.detail;
+      }
     } catch {
       detail = options.errorMessage;
     }

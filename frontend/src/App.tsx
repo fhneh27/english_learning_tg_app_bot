@@ -18,6 +18,7 @@ import {
   updateSeriesProgress,
 } from "./api/media";
 import { searchMusicTracks } from "./api/music";
+import { setApiAuthContext } from "./api/auth";
 import { APP_DISPLAY_VERSION } from "./appVersion";
 import {
   blacklistVocabularySuggestion,
@@ -233,6 +234,10 @@ function App() {
     homeMediaContext?.source_label ??
     (selectedMusicTrack ? `${selectedMusicTrack.artist_name} - ${selectedMusicTrack.title}` : null);
   const tgUserId = tgUser.id;
+
+  useEffect(() => {
+    setApiAuthContext(tgUserId);
+  }, [tgUserId]);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -2117,18 +2122,32 @@ function normalizeVocabularyStatus(value: string): VocabularyEntry["status"] {
 
 function getTelegramUser(): { id: number; username?: string; firstName?: string } {
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+  if (user?.id) {
+    window.localStorage.setItem(STORAGE_TG_USER_KEY, String(user.id));
+    return {
+      id: user.id,
+      username: user.username,
+      firstName: user.first_name,
+    };
+  }
+
+  if (import.meta.env.PROD) {
+    const storedUserId = Number(window.localStorage.getItem(STORAGE_TG_USER_KEY) || "");
+    if (Number.isFinite(storedUserId) && storedUserId > 0) {
+      return { id: storedUserId };
+    }
+    return { id: 0 };
+  }
+
   const envDevUserId = Number(import.meta.env.VITE_DEV_TG_USER_ID || DEFAULT_DEV_TG_USER_ID);
   const storedUserId = Number(window.localStorage.getItem(STORAGE_TG_USER_KEY) || "");
   const fallbackUserId = Number.isFinite(storedUserId) && storedUserId > 0 ? storedUserId : envDevUserId;
 
-  if (user?.id) {
-    window.localStorage.setItem(STORAGE_TG_USER_KEY, String(user.id));
-  }
-
   return {
-    id: user?.id ?? fallbackUserId,
-    username: user?.username,
-    firstName: user?.first_name,
+    id: fallbackUserId,
+    username: undefined,
+    firstName: undefined,
   };
 }
 

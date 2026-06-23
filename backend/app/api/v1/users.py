@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import assert_matching_tg_user_id, enforce_ai_rate_limit, get_authenticated_tg_user_id
 from app.db.session import get_db_session
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.user_repository import UserRepository
@@ -23,35 +24,27 @@ router = APIRouter()
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(
     payload: UserRegisterRequest,
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> UserResponse:
+    assert_matching_tg_user_id(payload.tg_user_id, tg_user_id)
     repository = UserRepository(session)
     await repository.upsert_user(
-        tg_user_id=payload.tg_user_id,
+        tg_user_id=tg_user_id,
         username=payload.username,
         first_name=payload.first_name,
     )
     await session.commit()
-    created_or_updated = await repository.get_by_tg_user_id(payload.tg_user_id)
+    created_or_updated = await repository.get_by_tg_user_id(tg_user_id)
     if created_or_updated is None:
         raise RuntimeError("Registered user not found after commit.")
     await session.refresh(created_or_updated)
     return created_or_updated
 
 
-@router.get("", response_model=list[UserResponse])
-async def list_users(
-    limit: int = Query(50, ge=1, le=200),
-    offset: int = Query(0, ge=0),
-    session: AsyncSession = Depends(get_db_session),
-) -> list[UserResponse]:
-    repository = UserRepository(session)
-    return await repository.list_users(limit=limit, offset=offset)
-
-
 @router.get("/streak", response_model=StreakSummaryResponse)
 async def get_user_streak(
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> StreakSummaryResponse:
     streak_service = StreakService(
@@ -64,7 +57,7 @@ async def get_user_streak(
 
 @router.get("/streak/suggestions", response_model=DailyVocabularySuggestionResponse)
 async def get_streak_suggestions(
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(enforce_ai_rate_limit),
     session: AsyncSession = Depends(get_db_session),
 ) -> DailyVocabularySuggestionResponse:
     streak_service = StreakService(
@@ -89,24 +82,28 @@ async def get_streak_suggestions(
 @router.post("/streak/suggestions/blacklist", response_model=SuggestionBlacklistResponse)
 async def add_suggestion_to_blacklist(
     payload: SuggestionBlacklistRequest,
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> SuggestionBlacklistResponse:
+    assert_matching_tg_user_id(payload.tg_user_id, tg_user_id)
     streak_service = StreakService(
         session=session,
         activity_repository=ActivityRepository(session),
         user_repository=UserRepository(session),
     )
-    blacklist_size = await streak_service.add_suggestion_to_blacklist(payload.tg_user_id, payload.text)
+    blacklist_size = await streak_service.add_suggestion_to_blacklist(tg_user_id, payload.text)
     return SuggestionBlacklistResponse(text=payload.text, blacklist_size=blacklist_size)
 
 
 @router.post("/ai-instructions", response_model=UpdateAIInstructionsResponse)
 async def update_ai_instructions(
     payload: UpdateAIInstructionsRequest,
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> UpdateAIInstructionsResponse:
+    assert_matching_tg_user_id(payload.tg_user_id, tg_user_id)
     repository = UserRepository(session)
-    user = await repository.update_ai_custom_instructions(payload.tg_user_id, payload.ai_custom_instructions)
+    user = await repository.update_ai_custom_instructions(tg_user_id, payload.ai_custom_instructions)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -123,7 +120,7 @@ async def update_ai_instructions(
 
 @router.get("/ai-instructions", response_model=UpdateAIInstructionsResponse)
 async def get_ai_instructions(
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> UpdateAIInstructionsResponse:
     repository = UserRepository(session)

@@ -92,4 +92,9 @@ async def global_error_handler(event: ErrorEvent) -> bool:
     logger.exception("Unhandled bot error: %s", event.exception)
     if event.update.message is not None:
         await event.update.message.answer("Something went wrong. Please try again.")
+    elif event.update.callback_query is not None:
+        await event.update.callback_query.answer(
+            "Something went wrong. Please try again.",
+            show_alert=True,
+        )
     return True

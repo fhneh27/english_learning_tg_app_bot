@@ -9,21 +9,21 @@ VALID_ANALYSIS_MODES = {"general", "slang", "conversation"}
 
 
 class ExampleItem(BaseModel):
-    en: str
-    ru: str
+    en: str = Field(min_length=1, max_length=500)
+    ru: str = Field(min_length=1, max_length=500)
 
 
 class AIVocabularyPayload(BaseModel):
-    original_text: str
-    normalized_text: str
-    translation_ru: str
-    meaning_ru: str
-    part_of_speech: str | None = None
-    level: str | None = None
-    transcription: str | None = None
-    examples: list[ExampleItem] = Field(default_factory=list)
-    synonyms: list[str] = Field(default_factory=list)
-    tags: list[str] = Field(default_factory=list)
+    original_text: str = Field(min_length=1, max_length=500)
+    normalized_text: str = Field(min_length=1, max_length=500)
+    translation_ru: str = Field(min_length=1, max_length=1000)
+    meaning_ru: str = Field(min_length=1, max_length=4000)
+    part_of_speech: str | None = Field(default=None, max_length=64)
+    level: str | None = Field(default=None, max_length=16)
+    transcription: str | None = Field(default=None, max_length=128)
+    examples: list[ExampleItem] = Field(default_factory=list, max_length=10)
+    synonyms: list[str] = Field(default_factory=list, max_length=20)
+    tags: list[str] = Field(default_factory=list, max_length=20)
 
 
 class VocabularyAnalyzeRequest(BaseModel):

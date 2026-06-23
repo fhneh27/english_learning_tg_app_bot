@@ -7,6 +7,7 @@ from app.core.config import get_settings
 from app.models.music import MusicTrack
 from app.models.vocabulary import VocabularyEntry
 from app.repositories.activity_repository import ActivityRepository
+from app.repositories.media_repository import MediaRepository
 from app.repositories.music_repository import MusicRepository
 from app.repositories.user_repository import UserRepository
 from app.repositories.vocabulary_repository import VocabularyRepository
@@ -32,6 +33,7 @@ class VocabularyService:
     ) -> None:
         self.session = session
         self.repository = repository or VocabularyRepository(session)
+        self.media_repository = MediaRepository(session)
         self.music_repository = music_repository or MusicRepository(session)
         self.user_repository = user_repository or UserRepository(session)
         self.activity_repository = activity_repository or ActivityRepository(session)
@@ -132,6 +134,14 @@ class VocabularyService:
         normalized_source_type = self._validate_source_type(source_type)
         attach_media = normalized_source_type == "media"
         attach_music = normalized_source_type == "music"
+        if attach_media:
+            await self._validate_media_references(
+                tg_user_id=tg_user_id,
+                media_item_id=media_item_id,
+                media_season_id=media_season_id,
+                media_episode_id=media_episode_id,
+                media_franchise_id=media_franchise_id,
+            )
         music_track = await self._resolve_music_track(
             tg_user_id=tg_user_id,
             attach_music=attach_music,
@@ -282,6 +292,41 @@ class VocabularyService:
         if normalized not in VALID_ANALYSIS_MODES:
             raise ValueError("Analysis mode must be one of: general, slang, conversation.")
         return normalized
+
+    async def _validate_media_references(
+        self,
+        *,
+        tg_user_id: int,
+        media_item_id: UUID | None,
+        media_season_id: UUID | None,
+        media_episode_id: UUID | None,
+        media_franchise_id: UUID | None,
+    ) -> None:
+        if media_item_id is not None:
+            item = await self.media_repository.get_item_by_id(media_item_id, tg_user_id)
+            if item is None:
+                raise ValueError("Selected media item was not found in your library.")
+
+        if media_franchise_id is not None:
+            franchise = await self.media_repository.get_item_by_id(media_franchise_id, tg_user_id)
+            if franchise is None or franchise.media_type != "franchise":
+                raise ValueError("Selected franchise was not found in your library.")
+
+        if media_season_id is not None:
+            season = await self.media_repository.get_season(media_season_id)
+            if season is None:
+                raise ValueError("Selected season was not found in your library.")
+            owner_item = await self.media_repository.get_item_by_id(season.series_item_id, tg_user_id)
+            if owner_item is None:
+                raise ValueError("Selected season was not found in your library.")
+
+        if media_episode_id is not None:
+            episode = await self.media_repository.get_episode(media_episode_id)
+            if episode is None:
+                raise ValueError("Selected episode was not found in your library.")
+            owner_item = await self.media_repository.get_item_by_id(episode.series_item_id, tg_user_id)
+            if owner_item is None:
+                raise ValueError("Selected episode was not found in your library.")
 
     async def _resolve_music_track(
         self,

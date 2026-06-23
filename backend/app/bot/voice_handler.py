@@ -32,7 +32,7 @@ async def process_voice_message(message: Message, state: FSMContext) -> None:
     try:
         transcription_service = VoiceTranscriptionService()
         transcript = await transcription_service.transcribe(message.bot, message.voice)
-        logger.info("Voice transcript (user=%s): %r", tg_user_id, transcript)
+        logger.info("Voice transcript received (user=%s, length=%s)", tg_user_id, len(transcript))
 
         await message.bot.send_chat_action(message.chat.id, ChatAction.TYPING)
 

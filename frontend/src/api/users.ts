@@ -15,15 +15,15 @@ export function registerUser(payload: RegisterUserPayload): Promise<void> {
   });
 }
 
-export function fetchUserStreak(tgUserId: number): Promise<StreakSummary> {
-  return apiRequest<StreakSummary>(`/users/streak?tg_user_id=${tgUserId}`, {
+export function fetchUserStreak(_tgUserId: number): Promise<StreakSummary> {
+  return apiRequest<StreakSummary>("/users/streak", {
     method: "GET",
     errorMessage: "Could not load streak data.",
   });
 }
 
-export function fetchDailyVocabularySuggestions(tgUserId: number): Promise<DailyVocabularySuggestion> {
-  return apiRequest<DailyVocabularySuggestion>(`/users/streak/suggestions?tg_user_id=${tgUserId}`, {
+export function fetchDailyVocabularySuggestions(_tgUserId: number): Promise<DailyVocabularySuggestion> {
+  return apiRequest<DailyVocabularySuggestion>("/users/streak/suggestions", {
     method: "GET",
     errorMessage: "Could not generate today's vocabulary suggestions.",
   });
@@ -43,8 +43,8 @@ export function blacklistVocabularySuggestion(
   });
 }
 
-export function fetchAIInstructions(tgUserId: number): Promise<AIInstructionsResponse> {
-  return apiRequest<AIInstructionsResponse>(`/users/ai-instructions?tg_user_id=${tgUserId}`, {
+export function fetchAIInstructions(_tgUserId: number): Promise<AIInstructionsResponse> {
+  return apiRequest<AIInstructionsResponse>("/users/ai-instructions", {
     method: "GET",
     errorMessage: "Could not load AI instructions.",
   });

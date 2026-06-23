@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import assert_matching_tg_user_id, enforce_ai_rate_limit, get_authenticated_tg_user_id
 from app.db.session import get_db_session
 from app.schemas.vocabulary import (
     VocabularyAnalysisResponse,
@@ -23,12 +24,14 @@ router = APIRouter()
 @router.post("", response_model=VocabularyEntryResponse, status_code=status.HTTP_201_CREATED)
 async def create_vocabulary_entry(
     payload: VocabularyCreateRequest,
+    tg_user_id: int = Depends(enforce_ai_rate_limit),
     session: AsyncSession = Depends(get_db_session),
 ) -> VocabularyEntryResponse:
+    assert_matching_tg_user_id(payload.tg_user_id, tg_user_id)
     service = VocabularyService(session)
     try:
         return await service.create_entry(
-            payload.tg_user_id,
+            tg_user_id,
             payload.text,
             payload.source_type,
             payload.analysis_mode,
@@ -51,7 +54,7 @@ async def create_vocabulary_entry(
     except OpenAIRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="OpenAI quota/rate limit reached. Please try later or switch API key.",
+            detail="OpenAI quota/rate limit reached. Please try later.",
         ) from exc
     except OpenAIServiceError as exc:
         raise HTTPException(
@@ -63,11 +66,13 @@ async def create_vocabulary_entry(
 @router.post("/analyze", response_model=VocabularyAnalysisResponse)
 async def analyze_vocabulary_entry(
     payload: VocabularyAnalyzeRequest,
+    tg_user_id: int = Depends(enforce_ai_rate_limit),
     session: AsyncSession = Depends(get_db_session),
 ) -> VocabularyAnalysisResponse:
+    assert_matching_tg_user_id(payload.tg_user_id, tg_user_id)
     service = VocabularyService(session)
     try:
-        analysis, ai_model = await service.analyze_text(payload.text, payload.analysis_mode)
+        analysis, ai_model = await service.analyze_text(payload.text, payload.analysis_mode, tg_user_id)
         return VocabularyAnalysisResponse(
             analysis=analysis,
             ai_model=ai_model,
@@ -78,7 +83,7 @@ async def analyze_vocabulary_entry(
     except OpenAIRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="OpenAI quota/rate limit reached. Please try later or switch API key.",
+            detail="OpenAI quota/rate limit reached. Please try later.",
         ) from exc
     except OpenAIServiceError as exc:
         raise HTTPException(
@@ -90,12 +95,14 @@ async def analyze_vocabulary_entry(
 @router.post("/save", response_model=VocabularyEntryResponse, status_code=status.HTTP_201_CREATED)
 async def save_vocabulary_entry(
     payload: VocabularySaveRequest,
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> VocabularyEntryResponse:
+    assert_matching_tg_user_id(payload.tg_user_id, tg_user_id)
     service = VocabularyService(session)
     try:
         return await service.save_entry(
-            payload.tg_user_id,
+            tg_user_id,
             payload.analysis,
             payload.source_type,
             payload.analysis_mode,
@@ -119,12 +126,12 @@ async def save_vocabulary_entry(
 
 @router.get("", response_model=list[VocabularyEntryResponse])
 async def list_vocabulary_entries(
-    tg_user_id: int = Query(..., description="Telegram user ID"),
-    q: str | None = Query(None, description="Search by original text or translation"),
+    q: str | None = Query(None, max_length=200, description="Search by original text or translation"),
     status_filter: str | None = Query(None, alias="status"),
     source_type: str | None = Query(None, alias="source_type"),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[VocabularyEntryResponse]:
     service = VocabularyService(session)
@@ -144,7 +151,7 @@ async def list_vocabulary_entries(
 @router.get("/{entry_id}", response_model=VocabularyEntryResponse)
 async def get_vocabulary_entry(
     entry_id: UUID,
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> VocabularyEntryResponse:
     service = VocabularyService(session)
@@ -158,7 +165,7 @@ async def get_vocabulary_entry(
 async def explain_vocabulary_entry(
     entry_id: UUID,
     payload: VocabularyFollowUpRequest,
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(enforce_ai_rate_limit),
     session: AsyncSession = Depends(get_db_session),
 ) -> VocabularyFollowUpResponse:
     service = VocabularyService(session)
@@ -171,7 +178,7 @@ async def explain_vocabulary_entry(
     except OpenAIRateLimitError as exc:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="OpenAI quota/rate limit reached. Please try later or switch API key.",
+            detail="OpenAI quota/rate limit reached. Please try later.",
         ) from exc
     except OpenAIServiceError as exc:
         raise HTTPException(
@@ -184,7 +191,7 @@ async def explain_vocabulary_entry(
 async def update_vocabulary_entry_status(
     entry_id: UUID,
     payload: VocabularyStatusUpdateRequest,
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> VocabularyEntryResponse:
     service = VocabularyService(session)
@@ -204,7 +211,7 @@ async def update_vocabulary_entry_status(
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_vocabulary_entry(
     entry_id: UUID,
-    tg_user_id: int = Query(..., description="Telegram user ID"),
+    tg_user_id: int = Depends(get_authenticated_tg_user_id),
     session: AsyncSession = Depends(get_db_session),
 ) -> None:
     service = VocabularyService(session)

@@ -42,7 +42,8 @@ class VocabularyRepository:
         )
 
         if query:
-            search_term = f"%{query.strip()}%"
+            escaped_query = self._escape_ilike(query.strip())
+            search_term = f"%{escaped_query}%"
             statement = statement.where(
                 or_(
                     VocabularyEntry.original_text.ilike(search_term),
@@ -59,6 +60,10 @@ class VocabularyRepository:
 
         result = await self.session.execute(statement)
         return list(result.scalars().all())
+
+    @staticmethod
+    def _escape_ilike(value: str) -> str:
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
     async def delete_by_id_and_user(self, entry_id: UUID, tg_user_id: int) -> bool:
         statement = delete(VocabularyEntry).where(

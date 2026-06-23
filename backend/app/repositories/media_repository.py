@@ -230,37 +230,49 @@ class MediaRepository:
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
-    async def list_words_for_media_item(self, media_item_id: UUID) -> list[VocabularyEntry]:
+    async def list_words_for_media_item(self, media_item_id: UUID, tg_user_id: int) -> list[VocabularyEntry]:
         statement = (
             select(VocabularyEntry)
-            .where(VocabularyEntry.media_item_id == media_item_id)
+            .where(
+                VocabularyEntry.media_item_id == media_item_id,
+                VocabularyEntry.tg_user_id == tg_user_id,
+            )
             .order_by(VocabularyEntry.created_at.desc())
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
-    async def list_words_for_season(self, season_id: UUID) -> list[VocabularyEntry]:
+    async def list_words_for_season(self, season_id: UUID, tg_user_id: int) -> list[VocabularyEntry]:
         statement = (
             select(VocabularyEntry)
-            .where(VocabularyEntry.media_season_id == season_id)
+            .where(
+                VocabularyEntry.media_season_id == season_id,
+                VocabularyEntry.tg_user_id == tg_user_id,
+            )
             .order_by(VocabularyEntry.created_at.desc())
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
-    async def list_words_for_episode(self, episode_id: UUID) -> list[VocabularyEntry]:
+    async def list_words_for_episode(self, episode_id: UUID, tg_user_id: int) -> list[VocabularyEntry]:
         statement = (
             select(VocabularyEntry)
-            .where(VocabularyEntry.media_episode_id == episode_id)
+            .where(
+                VocabularyEntry.media_episode_id == episode_id,
+                VocabularyEntry.tg_user_id == tg_user_id,
+            )
             .order_by(VocabularyEntry.created_at.desc())
         )
         result = await self.session.execute(statement)
         return list(result.scalars().all())
 
-    async def list_words_for_franchise(self, franchise_id: UUID) -> list[VocabularyEntry]:
+    async def list_words_for_franchise(self, franchise_id: UUID, tg_user_id: int) -> list[VocabularyEntry]:
         statement = (
             select(VocabularyEntry)
-            .where(VocabularyEntry.media_franchise_id == franchise_id)
+            .where(
+                VocabularyEntry.media_franchise_id == franchise_id,
+                VocabularyEntry.tg_user_id == tg_user_id,
+            )
             .order_by(VocabularyEntry.created_at.desc())
         )
         result = await self.session.execute(statement)

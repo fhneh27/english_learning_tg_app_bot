@@ -54,43 +54,43 @@ export function addMediaToLibrary(
   });
 }
 
-export function fetchMediaLibrary(tgUserId: number): Promise<MediaLibraryResponse> {
-  return apiRequest<MediaLibraryResponse>(`/media/library?tg_user_id=${tgUserId}`, {
+export function fetchMediaLibrary(_tgUserId: number): Promise<MediaLibraryResponse> {
+  return apiRequest<MediaLibraryResponse>("/media/library", {
     method: "GET",
     errorMessage: "Could not load media library.",
   });
 }
 
 export function fetchMovieDetail(itemId: string, tgUserId: number): Promise<MovieDetail> {
-  return apiRequest<MovieDetail>(`/media/movies/${itemId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<MovieDetail>(`/media/movies/${itemId}`, {
     method: "GET",
     errorMessage: "Could not load movie details.",
   });
 }
 
 export function fetchSeriesDetail(itemId: string, tgUserId: number): Promise<SeriesDetail> {
-  return apiRequest<SeriesDetail>(`/media/series/${itemId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<SeriesDetail>(`/media/series/${itemId}`, {
     method: "GET",
     errorMessage: "Could not load series details.",
   });
 }
 
 export function fetchSeasonDetail(seasonId: string, tgUserId: number): Promise<SeasonDetail> {
-  return apiRequest<SeasonDetail>(`/media/seasons/${seasonId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<SeasonDetail>(`/media/seasons/${seasonId}`, {
     method: "GET",
     errorMessage: "Could not load season details.",
   });
 }
 
 export function fetchEpisodeDetail(episodeId: string, tgUserId: number): Promise<EpisodeDetail> {
-  return apiRequest<EpisodeDetail>(`/media/episodes/${episodeId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<EpisodeDetail>(`/media/episodes/${episodeId}`, {
     method: "GET",
     errorMessage: "Could not load episode details.",
   });
 }
 
 export function fetchFranchiseDetail(itemId: string, tgUserId: number): Promise<FranchiseDetail> {
-  return apiRequest<FranchiseDetail>(`/media/franchises/${itemId}?tg_user_id=${tgUserId}`, {
+  return apiRequest<FranchiseDetail>(`/media/franchises/${itemId}`, {
     method: "GET",
     errorMessage: "Could not load franchise details.",
   });
@@ -164,7 +164,7 @@ export function fetchMediaVocabulary(
   tgUserId: number,
   scope: MediaVocabularyScope
 ): Promise<MediaWordsResponse> {
-  return apiRequest<MediaWordsResponse>(`/media/vocabulary?tg_user_id=${tgUserId}&scope=${scope}`, {
+  return apiRequest<MediaWordsResponse>(`/media/vocabulary?scope=${scope}`, {
     method: "GET",
     errorMessage: "Could not load media vocabulary.",
   });

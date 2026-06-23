@@ -143,9 +143,7 @@ class VoiceIntentService:
         try:
             intent = VoiceIntent.model_validate(data)
         except ValidationError:
-            logger.warning(
-                "VoiceIntent validation failed, returning low-confidence result. raw=%s", data
-            )
+            logger.warning("VoiceIntent validation failed, returning low-confidence result.")
             word = data.get("word_or_phrase") if isinstance(data, dict) else None
             return VoiceIntent(
                 word_or_phrase=str(word).strip() if word else None,
