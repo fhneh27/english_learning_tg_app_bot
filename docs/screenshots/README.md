@@ -16,5 +16,5 @@ Suggested captures (portrait, Telegram Mini App on phone):
 Tips:
 
 - Use a real Telegram theme (dark looks best with this UI).
-- Crop to phone frame or use a clean device mockup.
+- Crop out the phone status bar and Telegram header — keep from the app nav bar down.
 - Keep file size under ~500 KB (WebP or compressed PNG).
