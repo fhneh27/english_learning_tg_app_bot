@@ -11,11 +11,6 @@ Send a word to the bot or add it in the app — get a structured learning card, 
 
 ## Screenshots
 
-_Screenshots are added to [`docs/screenshots/`](docs/screenshots/) and embedded below._
-
-<!--
-When screenshots are ready, uncomment this block:
-
 <p align="center">
   <img src="docs/screenshots/home.png" width="220" alt="Home — add word and recent entries" />
   <img src="docs/screenshots/words.png" width="220" alt="Words list with search and filters" />
@@ -24,20 +19,8 @@ When screenshots are ready, uncomment this block:
 </p>
 <p align="center">
   <img src="docs/screenshots/media.png" width="220" alt="Media library" />
-  <img src="docs/screenshots/bot.png" width="220" alt="Telegram bot reply" />
+  <img src="docs/screenshots/bot.png" width="220" alt="Telegram bot voice reply" />
 </p>
--->
-
-| # | File | Capture |
-|---|------|---------|
-| 1 | `home.png` | Home tab — form + recent words |
-| 2 | `words.png` | Words tab — list + search |
-| 3 | `word-detail.png` | Open word card (full screen) |
-| 4 | `streak.png` | Streak tab |
-| 5 | `media.png` | Media library or detail |
-| 6 | `bot.png` | Bot reply after sending a word |
-
-Capture guide: [`docs/screenshots/README.md`](docs/screenshots/README.md)
 
 ---
 
