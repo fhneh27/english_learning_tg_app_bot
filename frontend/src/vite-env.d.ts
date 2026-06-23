@@ -11,6 +11,7 @@ type TelegramWebAppInitDataUnsafe = {
 };
 
 type TelegramWebApp = {
+  initData?: string;
   initDataUnsafe?: TelegramWebAppInitDataUnsafe;
   ready: () => void;
   expand: () => void;
