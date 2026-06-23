@@ -11,16 +11,52 @@ Send a word to the bot or add it in the app — get a structured learning card, 
 
 ## Screenshots
 
-<p align="center">
-  <img src="docs/screenshots/home.png" width="220" alt="Home — add word and recent entries" />
-  <img src="docs/screenshots/words.png" width="220" alt="Words list with search and filters" />
-  <img src="docs/screenshots/word-detail.png" width="220" alt="Full-screen word card" />
-  <img src="docs/screenshots/streak.png" width="220" alt="Daily streak and goals" />
-</p>
-<p align="center">
-  <img src="docs/screenshots/media.png" width="220" alt="Media library" />
-  <img src="docs/screenshots/bot.png" width="220" alt="Telegram bot voice reply" />
-</p>
+<p align="center"><sub>Mini App · Telegram bot · dark theme · mobile-first UI</sub></p>
+
+<table align="center">
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/home.png" width="280" alt="Home — add word and recent entries" />
+      <br /><br />
+      <strong>Home</strong>
+      <br /><sub>Quick add flow · recent words · voice hint</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/words.png" width="280" alt="Words list with search and filters" />
+      <br /><br />
+      <strong>Vocabulary</strong>
+      <br /><sub>Search · status filters · media tags</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/word-detail.png" width="280" alt="Full-screen word card with examples" />
+      <br /><br />
+      <strong>Word card</strong>
+      <br /><sub>Full-screen modal · translation · examples · Ask AI</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/streak.png" width="280" alt="Daily streak and goals" />
+      <br /><br />
+      <strong>Streak</strong>
+      <br /><sub>Daily goals · progress ring · activity</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/media.png" width="280" alt="Media library — movies and series" />
+      <br /><br />
+      <strong>Media library</strong>
+      <br /><sub>Movies & series · watch progress · TMDB</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/bot.png" width="280" alt="Telegram bot voice reply" />
+      <br /><br />
+      <strong>Telegram bot</strong>
+      <br /><sub>Text or voice → structured learning card</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
