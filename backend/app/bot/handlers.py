@@ -1,16 +1,14 @@
 import asyncio
 import logging
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import ErrorEvent, Message
 
 from app.bot.bot_version import BOT_DISPLAY_VERSION
-from app.bot.entry_replies import format_capture_reply
 from app.bot.keyboards import build_app_inline_keyboard, build_app_reply_keyboard
 from app.db.session import AsyncSessionLocal
 from app.repositories.user_repository import UserRepository
-from app.services.word_capture_service import WordCaptureService
 
 logger = logging.getLogger(__name__)
 
@@ -88,28 +86,6 @@ async def app_command(message: Message) -> None:
         "Open your vocabulary notebook in the Mini App.",
         reply_markup=build_app_inline_keyboard(),
     )
-
-
-@router.message(F.text)
-async def process_text_message(message: Message) -> None:
-    if message.from_user is None:
-        await message.answer("I could not detect your Telegram account. Please try again.")
-        return
-
-    async with AsyncSessionLocal() as session:
-        capture_service = WordCaptureService(session)
-        try:
-            result = await capture_service.capture_and_save(
-                message.from_user.id,
-                message.text or "",
-                allow_legacy_fallback=True,
-            )
-        except Exception:
-            logger.exception("Unexpected error while saving text entry")
-            await message.answer("Something went wrong while saving your entry. Please try again.")
-            return
-
-    await message.answer(format_capture_reply(result))
 
 
 async def global_error_handler(event: ErrorEvent) -> bool:

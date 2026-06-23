@@ -2,12 +2,11 @@ import logging
 
 from aiogram import F, Router
 from aiogram.enums import ChatAction
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from app.bot.entry_replies import format_capture_reply
-from app.db.session import AsyncSessionLocal
+from app.bot.capture_flow import start_capture
 from app.services.voice_transcription_service import VoiceTranscriptionError, VoiceTranscriptionService
-from app.services.word_capture_service import WordCaptureService
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ voice_router = Router()
 
 
 @voice_router.message(F.voice)
-async def process_voice_message(message: Message) -> None:
+async def process_voice_message(message: Message, state: FSMContext) -> None:
     if message.from_user is None:
         await message.answer("I could not detect your Telegram account. Please try again.")
         return
@@ -37,15 +36,7 @@ async def process_voice_message(message: Message) -> None:
 
         await message.bot.send_chat_action(message.chat.id, ChatAction.TYPING)
 
-        async with AsyncSessionLocal() as session:
-            capture_service = WordCaptureService(session)
-            result = await capture_service.capture_and_save(
-                tg_user_id,
-                transcript,
-                allow_legacy_fallback=False,
-            )
-
-        await message.answer(format_capture_reply(result))
+        await start_capture(message, state, tg_user_id, transcript)
     except VoiceTranscriptionError:
         await message.answer(
             "I could not transcribe your voice message. Please try again or type the word manually."

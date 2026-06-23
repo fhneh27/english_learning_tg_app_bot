@@ -80,6 +80,65 @@ class WordCaptureService:
 
         return await self._save_from_intent(tg_user_id, intent, cleaned)
 
+    async def analyze(self, raw_text: str) -> VoiceIntent | None:
+        """Extract intent WITHOUT saving.
+
+        Returns a VoiceIntent (possibly low-confidence) or None when the intent
+        API itself is unavailable. Used by the interactive capture flow so it can
+        pause and ask the user before committing anything.
+        """
+        cleaned = raw_text.strip()
+        if not cleaned:
+            return VoiceIntent(confidence="low")
+
+        try:
+            intent = await self.intent_service.extract(cleaned)
+        except VoiceIntentError:
+            return None
+
+        intent = enrich_intent_with_music_heuristics(cleaned, intent)
+        intent = self._recover_word_from_mixed_message(cleaned, intent)
+        return intent
+
+    async def save_entry(
+        self,
+        tg_user_id: int,
+        *,
+        word: str,
+        source_type: str,
+        analysis_mode: str,
+        media_item_id=None,
+        media_season_id=None,
+        media_episode_id=None,
+        source_label: str | None = None,
+        music_kwargs: dict | None = None,
+    ) -> WordCaptureResult:
+        """Run AI analysis and persist an entry with an already-resolved source."""
+        try:
+            entry = await self.vocabulary_service.create_entry(
+                tg_user_id=tg_user_id,
+                text=word,
+                source_type=source_type,
+                analysis_mode=analysis_mode,
+                media_item_id=media_item_id,
+                media_season_id=media_season_id,
+                media_episode_id=media_episode_id,
+                source_label=source_label,
+                **(music_kwargs or {}),
+            )
+        except ValueError:
+            return WordCaptureResult(error_message="Please send a non-empty English word or phrase.")
+        except OpenAIServiceError:
+            return WordCaptureResult(
+                error_message="The AI service is unavailable right now. Please try again in a moment."
+            )
+
+        return WordCaptureResult(ok=True, entry=entry, source_label=source_label)
+
+    async def legacy_save(self, tg_user_id: int, text: str) -> WordCaptureResult:
+        """Public wrapper for a no-frills save used as an API-failure fallback."""
+        return await self._legacy_save(tg_user_id, text)
+
     async def _save_from_intent(
         self,
         tg_user_id: int,

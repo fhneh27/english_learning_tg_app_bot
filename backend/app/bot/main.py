@@ -4,8 +4,10 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 
+from app.bot.capture_flow import capture_router
 from app.bot.handlers import global_error_handler, router
 from app.bot.voice_handler import voice_router
 from app.core.config import get_settings
@@ -19,11 +21,13 @@ async def main() -> None:
         token=settings.tg_bot_token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
-    dispatcher = Dispatcher()
+    dispatcher = Dispatcher(storage=MemoryStorage())
     dispatcher.errors.register(global_error_handler)
-    # Voice handler must be registered before the generic text handler.
+    # Order matters: voice first, then commands, then the interactive capture
+    # flow (which owns all generic text + confirmation callbacks/states).
     dispatcher.include_router(voice_router)
     dispatcher.include_router(router)
+    dispatcher.include_router(capture_router)
 
     await bot.set_my_commands(
         [
