@@ -45,6 +45,10 @@ DEFAULT_UI_LANGUAGE=ru
 DEFAULT_LEARNING_LANGUAGE=en
 DEFAULT_TRANSLATION_LANGUAGE=ru
 
+ALLOW_DEV_AUTH_BYPASS=false
+TELEGRAM_INIT_DATA_MAX_AGE_SECONDS=86400
+AI_RATE_LIMIT_PER_HOUR=60
+
 WEBAPP_URL=https://ЗАМЕНИТЕ-ПОСЛЕ-ФРОНТА.railway.app
 CORS_ORIGINS=https://ЗАМЕНИТЕ-ПОСЛЕ-ФРОНТА.railway.app
 
@@ -64,7 +68,7 @@ VITE_API_URL=/api/v1
 
 Вверху: **Apply changes** → **Deploy**.
 
-Миграции запускаются автоматически (`preDeployCommand` в `railway.toml`).
+Миграции запускаются автоматически в `startCommand` (`alembic upgrade head`) в `railway.toml`.
 
 ---
 

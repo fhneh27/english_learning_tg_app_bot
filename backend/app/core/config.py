@@ -49,9 +49,9 @@ class Settings(BaseSettings):
     default_learning_language: str = Field(alias="DEFAULT_LEARNING_LANGUAGE")
     default_translation_language: str = Field(alias="DEFAULT_TRANSLATION_LANGUAGE")
 
-    cors_origins_raw: str = Field(alias="CORS_ORIGINS")
+    cors_origins_raw: str = Field(default="", alias="CORS_ORIGINS")
 
-    allow_dev_auth_bypass: bool = Field(default=True, alias="ALLOW_DEV_AUTH_BYPASS")
+    allow_dev_auth_bypass: bool = Field(default=False, alias="ALLOW_DEV_AUTH_BYPASS")
     dev_tg_user_id: int = Field(default=123456789, alias="DEV_TG_USER_ID")
     telegram_init_data_max_age_seconds: int = Field(default=86_400, alias="TELEGRAM_INIT_DATA_MAX_AGE_SECONDS")
     ai_rate_limit_per_hour: int = Field(default=60, alias="AI_RATE_LIMIT_PER_HOUR")
@@ -82,16 +82,28 @@ class Settings(BaseSettings):
         }
 
         if self.is_production:
-            if self.allow_dev_auth_bypass:
-                raise ValueError("ALLOW_DEV_AUTH_BYPASS must be false in production.")
+            # Never allow dev auth bypass in production, even if the env var is misconfigured.
+            self.allow_dev_auth_bypass = False
+
             if self.tg_bot_token.strip() in placeholder_tokens:
                 raise ValueError("TG_BOT_TOKEN must be set to a real bot token in production.")
             if self.openai_api_key.strip() in placeholder_tokens:
                 raise ValueError("OPENAI_API_KEY must be set to a real API key in production.")
-            if not self.cors_origins:
-                raise ValueError("CORS_ORIGINS must include at least one origin in production.")
-            if any(origin.startswith("http://localhost") for origin in self.cors_origins):
-                raise ValueError("Localhost CORS origins are not allowed in production.")
+
+            if self.cors_origins_raw.strip():
+                safe_origins = [
+                    origin
+                    for origin in self.cors_origins
+                    if not origin.startswith("http://localhost")
+                    and not origin.startswith("http://127.0.0.1")
+                ]
+                if safe_origins:
+                    if len(safe_origins) != len(self.cors_origins):
+                        self.cors_origins_raw = ",".join(safe_origins)
+                else:
+                    # Bot worker may inherit localhost-only CORS from the API service copy.
+                    # CORS is not used by the bot process, so clear it instead of crashing.
+                    self.cors_origins_raw = ""
 
         return self
 
