@@ -1103,35 +1103,9 @@ function App() {
                 <p className="section-title">Fast action</p>
                 <h2>Add vocabulary in one clean flow</h2>
               </div>
-              <span className="app-version-badge">v{APP_DISPLAY_VERSION}</span>
             </div>
 
             <div className="stack">
-              <div className="mode-selector">
-                <div className="mode-selector-head">
-                  <div>
-                    <p className="section-title">Slang mode</p>
-                    <p className="detail-line">
-                      Choose how AI should interpret and explain this word before analysis.
-                    </p>
-                  </div>
-                </div>
-                <div className="mode-grid">
-                  {ANALYSIS_MODE_OPTIONS.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      data-mode={option.value}
-                      className={option.value === analysisMode ? "mode-option active" : "mode-option"}
-                      onClick={() => setAnalysisMode(option.value)}
-                    >
-                      <strong>{formatAnalysisModeLabel(option.value)}</strong>
-                      <span>{option.description}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {activeSourceLabel ? (
                 <Card className="home-source-context">
                   <div className="source-context-row">
@@ -1914,6 +1888,33 @@ function App() {
               </div>
             </Card>
 
+            <Card>
+              <div className="mode-selector">
+                <div className="mode-selector-head">
+                  <div>
+                    <p className="section-title">Analysis mode</p>
+                    <p className="detail-line">
+                      Choose how AI should interpret and explain words before analysis.
+                    </p>
+                  </div>
+                </div>
+                <div className="mode-grid">
+                  {ANALYSIS_MODE_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      data-mode={option.value}
+                      className={option.value === analysisMode ? "mode-option active" : "mode-option"}
+                      onClick={() => setAnalysisMode(option.value)}
+                    >
+                      <strong>{formatAnalysisModeLabel(option.value)}</strong>
+                      <span>{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </Card>
+
             <Card className="ai-instructions-card">
               <div className="card-heading">
                 <div>
@@ -1964,9 +1965,14 @@ function App() {
             </Card>
 
             <Card>
-              <p className="section-title">App</p>
-              <h3 style={{ margin: "0 0 8px" }}>Telegram English Vocabulary</h3>
-              <p className="detail-line">Vocabulary notebook for Russian-speaking English learners.</p>
+              <div className="card-heading">
+                <div>
+                  <p className="section-title">App</p>
+                  <h3 style={{ margin: "0 0 8px" }}>Telegram English Vocabulary</h3>
+                  <p className="detail-line">Vocabulary notebook for Russian-speaking English learners.</p>
+                </div>
+                <span className="app-version-badge">v{APP_DISPLAY_VERSION}</span>
+              </div>
             </Card>
             <Card>
               <p className="section-title">AI Provider</p>
