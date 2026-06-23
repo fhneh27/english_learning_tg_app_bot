@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     backend_reload: bool = Field(alias="BACKEND_RELOAD")
     api_v1_prefix: str = Field(alias="API_V1_PREFIX")
 
+    db_pool_size: int = Field(default=5, alias="DB_POOL_SIZE")
+    db_max_overflow: int = Field(default=10, alias="DB_MAX_OVERFLOW")
+    db_pool_recycle_seconds: int = Field(default=1800, alias="DB_POOL_RECYCLE_SECONDS")
+
     frontend_port: int = Field(alias="FRONTEND_PORT")
     webapp_url: str = Field(alias="WEBAPP_URL")
     vite_api_url: str = Field(alias="VITE_API_URL")
@@ -59,6 +63,10 @@ class Settings(BaseSettings):
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins_raw.split(",") if origin.strip()]
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() in {"production", "prod"}
 
 
 @lru_cache(maxsize=1)

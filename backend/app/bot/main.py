@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -11,11 +10,12 @@ from app.bot.capture_flow import capture_router
 from app.bot.handlers import global_error_handler, router
 from app.bot.voice_handler import voice_router
 from app.core.config import get_settings
+from app.core.logging import configure_logging
 
 
 async def main() -> None:
     settings = get_settings()
-    logging.basicConfig(level=settings.log_level.upper())
+    configure_logging(settings.log_level)
 
     bot = Bot(
         token=settings.tg_bot_token,
