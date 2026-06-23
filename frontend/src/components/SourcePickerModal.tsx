@@ -1,8 +1,10 @@
 import { ChangeEvent, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import Button from "./Button";
 import Card from "./Card";
 import Input from "./Input";
+import { useBodyScrollLock } from "../hooks/useBodyScrollLock";
 import { useGsapModal } from "../hooks/useGsapMotion";
 import { MediaCard, MediaSearchFilter, MediaSearchItem } from "../types/media";
 import { MusicTrackSearchItem } from "../types/music";
@@ -73,8 +75,9 @@ function SourcePickerModal({
   const canApply = isMedia ? Boolean(selectedMedia) : Boolean(selectedMusicTrack);
 
   useGsapModal(modalRef, [mode]);
+  useBodyScrollLock(true);
 
-  return (
+  return createPortal(
     <div className="source-picker-overlay" role="dialog" aria-modal="true" onClick={onClose} ref={modalRef}>
       <Card className="source-picker-modal" onClick={(event) => event.stopPropagation()}>
         <div className="source-picker-header">
@@ -215,7 +218,8 @@ function SourcePickerModal({
           </Button>
         </div>
       </Card>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

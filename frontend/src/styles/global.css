@@ -1116,7 +1116,7 @@ input, textarea { color: var(--text); }
 .source-picker-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1300;
+  z-index: 10000;
   display: grid;
   place-items: end center;
   padding: 16px;
@@ -1126,6 +1126,8 @@ input, textarea { color: var(--text); }
     rgba(2, 5, 12, 0.78);
   backdrop-filter: blur(8px);
   animation: fade-in 0.18s ease both;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 .source-picker-modal {
@@ -1270,16 +1272,69 @@ input, textarea { color: var(--text); }
 }
 
 .entry-modal-overlay {
-  position: fixed; inset: 0; z-index: 1200; background: var(--modal-overlay);
-  display: grid; place-items: center; padding: 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--modal-overlay);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 .entry-modal {
-  width: min(100%, 760px); max-height: calc(100dvh - 32px); overflow-y: auto; overflow-x: hidden;
-  background: var(--panel-strong); border: 1px solid var(--panel-border);
-  border-radius: 28px; box-shadow: var(--shadow-lg);
+  width: 100%;
+  height: 100%;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  background: var(--panel-strong);
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-lg);
 }
-.entry-modal-header { margin-bottom: 14px; }
+.entry-modal-header {
+  flex-shrink: 0;
+  margin-bottom: 0;
+  padding:
+    calc(12px + env(safe-area-inset-top, 0px))
+    16px
+    12px;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel-strong);
+}
+.entry-modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 720px) {
+  .entry-modal-overlay {
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    touch-action: auto;
+  }
+  .entry-modal {
+    width: min(100%, 760px);
+    height: auto;
+    max-height: min(92dvh, 760px);
+    border-radius: 28px;
+    border: 1px solid var(--panel-border);
+  }
+  .entry-modal-header {
+    padding-top: 16px;
+  }
+}
 .entry-source-block {
   display: flex;
   align-items: center;
