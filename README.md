@@ -1,144 +1,205 @@
-# Telegram English Vocabulary Mini App
+# English Vocabulary — Telegram Mini App
 
-Telegram English Vocabulary Mini App is an MVP vocabulary notebook for Russian-speaking learners. A user can send an English word or phrase to a Telegram bot or enter it through a Telegram Mini App, get a structured OpenAI explanation, and save the result to PostgreSQL for later review.
+Personal English vocabulary notebook powered by **Telegram Bot**, **Mini App**, **OpenAI**, and **PostgreSQL**.  
+Send a word to the bot or add it in the app — get a structured learning card, track progress, link words to movies/music, and keep a daily streak.
 
-## Stack
+> Portfolio project · not a public SaaS · built for learning and demo
 
-- FastAPI for the backend API
-- aiogram for the Telegram bot
-- PostgreSQL with SQLAlchemy 2.x async and Alembic
-- OpenAI API for vocabulary analysis
-- React + Vite + TypeScript for the Telegram Mini App
-- Docker Compose for local development
+![CI](https://github.com/fhneh27/english_learning_tg_app_bot/actions/workflows/ci.yml/badge.svg)
 
-## Project Structure
+---
 
-```text
-backend/
-  app/
-    api/
-    bot/
-    core/
-    db/
-    models/
-    repositories/
-    schemas/
-    services/
-  alembic/
-frontend/
-  src/
-docker-compose.yml
-.env.example
-README.md
+## Screenshots
+
+_Screenshots are added to [`docs/screenshots/`](docs/screenshots/) and embedded below._
+
+<!--
+When screenshots are ready, uncomment this block:
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="220" alt="Home — add word and recent entries" />
+  <img src="docs/screenshots/words.png" width="220" alt="Words list with search and filters" />
+  <img src="docs/screenshots/word-detail.png" width="220" alt="Full-screen word card" />
+  <img src="docs/screenshots/streak.png" width="220" alt="Daily streak and goals" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/media.png" width="220" alt="Media library" />
+  <img src="docs/screenshots/bot.png" width="220" alt="Telegram bot reply" />
+</p>
+-->
+
+| # | File | Capture |
+|---|------|---------|
+| 1 | `home.png` | Home tab — form + recent words |
+| 2 | `words.png` | Words tab — list + search |
+| 3 | `word-detail.png` | Open word card (full screen) |
+| 4 | `streak.png` | Streak tab |
+| 5 | `media.png` | Media library or detail |
+| 6 | `bot.png` | Bot reply after sending a word |
+
+Capture guide: [`docs/screenshots/README.md`](docs/screenshots/README.md)
+
+---
+
+## Highlights
+
+| Area | What stands out |
+|------|-----------------|
+| **Architecture** | Layered backend: routes → services → repositories. Bot and API share business logic. |
+| **Security** | Telegram Mini App `initData` HMAC validation; no trusting client `tg_user_id` in production. |
+| **UX** | Mobile-first UI, GSAP motion, dark/light theme, full-screen word detail modal. |
+| **Ops** | Docker Compose locally, Railway deploy with auto-migrations, DB healthcheck. |
+| **Quality** | Alembic migrations, typed Python/TS, pytest suite, GitHub Actions CI. |
+
+---
+
+## Features
+
+### Core vocabulary
+- Add words via **Telegram bot** (text + voice) or **Mini App**
+- OpenAI structured cards: translation, meaning, examples, synonyms, CEFR level
+- Analysis modes: general / slang / conversation
+- Search, status (`new` → `learning` → `learned`), delete, AI follow-up questions
+
+### Learning & motivation
+- Daily **streak** with goals and activity calendar
+- AI vocabulary suggestions for the day
+- Custom AI instructions per user
+
+### Media & music context
+- Link words to **TMDB** movies/series (library, seasons, episodes, progress)
+- Link words to **MusicBrainz** tracks
+- Media-scoped vocabulary views
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph clients [Clients]
+    TG[Telegram Bot]
+    MA[Mini App React]
+  end
+
+  subgraph backend [Backend Python]
+    API[FastAPI API]
+    BOT[aiogram Bot]
+    SVC[Services]
+    REPO[Repositories]
+  end
+
+  subgraph external [External]
+    OAI[OpenAI API]
+    TMDB[TMDB API]
+    MB[MusicBrainz]
+  end
+
+  DB[(PostgreSQL)]
+
+  TG --> BOT
+  MA -->|initData auth| API
+  BOT --> SVC
+  API --> SVC
+  SVC --> REPO
+  SVC --> OAI
+  SVC --> TMDB
+  SVC --> MB
+  REPO --> DB
 ```
 
-## MVP Features
+**Request flow (Mini App):** client sends `X-Telegram-Init-Data` → backend validates HMAC with bot token → `tg_user_id` derived server-side → service layer → PostgreSQL.
 
-- Telegram bot commands: `/start`, `/help`, `/app`
-- Add vocabulary from bot messages
-- Add vocabulary from the Mini App
-- Save entries by `tg_user_id`
-- Search entries by English text or Russian meaning
-- Update entry status: `new`, `learning`, `learned`
-- Delete entries
-- PostgreSQL persistence through Docker
-- Alembic migrations
+---
 
-## Environment Variables
+## Tech stack
 
-1. Copy the example file:
+| Layer | Technologies |
+|-------|--------------|
+| Backend | Python 3.11, FastAPI, aiogram 3, SQLAlchemy 2 async, Alembic, httpx |
+| Frontend | React 18, TypeScript, Vite, GSAP, Framer Motion |
+| Data | PostgreSQL 16 |
+| AI | OpenAI (`gpt-4o-mini`, Whisper for voice) |
+| Infra | Docker Compose, Railway |
+
+---
+
+## Quick start (local)
 
 ```bash
 cp .env.example .env
-```
+# Set TG_BOT_TOKEN and OPENAI_API_KEY
 
-1. Fill in:
-
-- `TG_BOT_TOKEN`
-- `OPENAI_API_KEY`
-
-The default OpenAI model is controlled only through `.env`:
-
-```env
-OPENAI_MODEL=gpt-4o-mini
-```
-
-## Run With Docker Compose
-
-```bash
 docker compose up --build
-```
-
-Services after startup:
-
-- API: [http://localhost:8000](http://localhost:8000)
-- Frontend: [http://localhost:5173](http://localhost:5173)
-- PostgreSQL host port: `55432`
-
-## Migrations
-
-Apply migrations:
-
-```bash
 docker compose exec backend-api alembic upgrade head
 ```
 
-Create a new migration later:
+| Service | URL |
+|---------|-----|
+| API | http://localhost:8000 |
+| API health | http://localhost:8000/api/v1/health |
+| Mini App (dev) | http://localhost:5173 |
+| Postgres (host) | localhost:`HOST_DB_PORT` from `.env` |
 
-```bash
-docker compose exec backend-api alembic revision --autogenerate -m "describe change"
-```
+Local Mini App uses dev auth bypass (`ALLOW_DEV_AUTH_BYPASS=true` in `.env.example`).
 
-## API Overview
+---
 
-Base prefix: `/api/v1`
+## Deploy (Railway)
 
-- `GET /api/v1/health`
-- `POST /api/v1/vocabulary`
-- `GET /api/v1/vocabulary`
-- `GET /api/v1/vocabulary/{entry_id}?tg_user_id=...`
-- `PATCH /api/v1/vocabulary/{entry_id}?tg_user_id=...`
-- `DELETE /api/v1/vocabulary/{entry_id}?tg_user_id=...`
+Production setup: [`docs/RAILWAY.md`](docs/RAILWAY.md)
 
-Example create request:
+Summary:
+- **4 services:** Postgres, `api`, `bot`, `frontend`
+- Migrations run automatically on API start (`alembic upgrade head`)
+- Set `APP_ENV=production`, `ALLOW_DEV_AUTH_BYPASS=false`, matching `CORS_ORIGINS` / `WEBAPP_URL`
 
-```json
-{
-  "tg_user_id": 123456789,
-  "text": "shallow"
-}
-```
+---
 
-Example list query:
+## Project structure
 
 ```text
-/api/v1/vocabulary?tg_user_id=123456789&q=shallow&status=new
+backend/app/
+  api/v1/          # REST routes + Telegram auth deps
+  bot/             # aiogram handlers, voice, capture flow
+  core/            # config, logging, telegram_auth, rate limit
+  services/        # business logic, OpenAI, media, streak
+  repositories/    # database access
+  models/          # SQLAlchemy models
+  schemas/         # Pydantic v2
+frontend/src/
+  api/             # typed API client + initData headers
+  components/      # UI building blocks
+  pages/           # tab screens
+  hooks/           # GSAP, scroll lock
 ```
 
-## Bot Notes
+---
 
-- `/start` explains the flow and shows a Mini App button.
-- Regular text messages are treated as English vocabulary input.
-- The bot uses the same backend service layer as the API, so vocabulary is saved consistently.
+## Tests & CI
 
-## Frontend Notes
+```bash
+# from repo root, with venv + .env loaded
+pytest backend/tests -q
+cd frontend && npm run build
+```
 
-- The Mini App reads `window.Telegram.WebApp.initDataUnsafe.user.id` when available.
-- Local development falls back to `123456789` when Telegram init data is missing.
-- The frontend uses `VITE_API_URL` and proxies API requests through Vite in Docker.
+GitHub Actions runs backend tests and frontend build on push (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
 
-## Development Notes
+---
 
-- Docker Compose is the primary way to run the project.
-- PostgreSQL credentials are built into the SQLAlchemy URL from environment variables.
-- OpenAI is the only AI provider used in this repository.
-- No real secrets should be committed. `.env` is ignored by Git.
+## Environment
 
-## Basic Run Instructions
+All variables: [`.env.example`](.env.example)
 
-1. Copy `.env.example` to `.env`.
-1. Add your Telegram bot token and OpenAI API key.
-1. Start the stack with `docker compose up --build`.
-1. Apply the migration with `docker compose exec backend-api alembic upgrade head`.
-1. Open the Mini App locally at [http://localhost:5173](http://localhost:5173).
-1. Set your Telegram bot Mini App URL to the `WEBAPP_URL` value from `.env`.
+Required secrets:
+- `TG_BOT_TOKEN` — [@BotFather](https://t.me/BotFather)
+- `OPENAI_API_KEY` — [OpenAI platform](https://platform.openai.com/)
+
+Optional: `TMDB_API_KEY` for media search.
+
+---
+
+## License
+
+Personal portfolio project. All rights reserved unless stated otherwise.
